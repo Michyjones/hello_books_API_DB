@@ -6,7 +6,7 @@ app = Flask(__name__)
 class BaseConfig(object):
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = 'postgresql://michy:password@localhost/mydb'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/mydb'
 
 
 class DevelopmentConfig(BaseConfig):
@@ -17,7 +17,7 @@ class DevelopmentConfig(BaseConfig):
 class TestingConfig(BaseConfig):
     DEBUG = False
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://michy:password@localhost/testdb'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/test_db'
 
 
 class StagingConfig(BaseConfig):
