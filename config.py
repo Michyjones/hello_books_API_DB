@@ -1,23 +1,21 @@
-from flask import Flask
-
-app = Flask(__name__)
-
-
 class BaseConfig(object):
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/mydb'
+    SQLALCHEMY_DATABASE_URI ='postgresql://postgres:password@localhost:5432/books'
 
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     TESTING = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 
 class TestingConfig(BaseConfig):
     DEBUG = False
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/test_db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@localhost:5432/tests'
 
 
 class StagingConfig(BaseConfig):
