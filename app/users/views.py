@@ -3,6 +3,7 @@ from flask.views import MethodView
 from functools import wraps
 import jwt
 import re
+import datetime
 
 from app.models import User, db
 
@@ -71,6 +72,32 @@ class UserRegister(MethodView):
         }), 201)
 
 
+class UserLogin(MethodView):
+    def post(self):
+        """ This method logs in an existing user"""
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        person = User.query.filter_by(email=email).first()
+
+        if person and person.verify_password(password):
+            token = jwt.encode({"email": person.email,
+                                "exp": datetime.datetime.utcnow(
+                                ) + datetime.timedelta(minutes=10)},
+                               SECRET_KEY)
+            return make_response(jsonify({"token": token.decode('UTF-8'),
+                                          "message":
+                                          "User login successfully"}), 200)
+        else:
+            return make_response(jsonify({"error":
+                                          "Invalid credentials"}), 401)
+
+
 user.add_url_rule(
     '/register', view_func=UserRegister.as_view(
         'register'), methods=['POST'])
+
+user.add_url_rule(
+    '/login', view_func=UserLogin.as_view(
+        'login'), methods=['POST'])
