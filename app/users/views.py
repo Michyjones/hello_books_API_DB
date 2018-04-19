@@ -1,23 +1,49 @@
 from flask import Blueprint, request, make_response, jsonify
-from app.models import User, db
-
 from flask.views import MethodView
+from functools import wraps
+import jwt
+import re
+
+from app.models import User, db
 
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
+SECRET_KEY = 'thismyprojectmichyjones'
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'x-access-token'in request.headers:
+            token = request.headers['x-access-token']
+        if not token:
+            return jsonify({"message": "Token is Missing!!!"})
+        try:
+            data = jwt.decode(token, SECRET_KEY)
+            current_user = User.query.filter_by(email=data['email']).first()
+        except:
+            return jsonify({"message": "Invalid Token!!"})
+        return f(current_user, *args, **kwargs)
+
+    return decorated
 
 
 class UserRegister(MethodView):
 
     def post(self):
+        """ This method create a new user"""
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
         role = data.get('role')
+        valid_email = re.match(
+            "(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
+            email.strip())
 
-        if email is None:
+        if valid_email is None:
             return make_response(jsonify(
-                {'error': 'Fill in the details'}), 400)
+                {'error': 'Please enter valid Email!'}), 400)
 
         if password is None:
             return make_response(jsonify({'error': 'Enter password'}), 400)
@@ -36,8 +62,7 @@ class UserRegister(MethodView):
         if person:
             return make_response(jsonify({
                 "error": "User already exist"
-                }))
-
+            }))
         new_user = User(email=email, password=password, role=role)
         db.session.add(new_user)
         db.session.commit()
