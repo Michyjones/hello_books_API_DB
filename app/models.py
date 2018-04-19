@@ -1,12 +1,22 @@
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class User(db.Model):
     __tablename__ = 'user'
+
+    def __init__(self, email, password, role):
+        self.email = email
+        self.password = generate_password_hash(password, method='sha256')
+        self.role = role
+
     email = db.Column(db.String(50), primary_key=True)
     password = db.Column(db.String(128))
     role = db.Column(db.String(20))
     borrows = db.relationship('Borrow', backref='user', lazy='dynamic')
+
+    def verify_password(self, password):
+        return check_password_hash(self.password, password)
 
 
 class Book(db.Model):
