@@ -1,12 +1,11 @@
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, make_response, jsonify, session, g
 from flask.views import MethodView
 from functools import wraps
 import jwt
 import re
 import datetime
 
-from app.models import User, db
-
+from app.models import User, db, generate_password_hash
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
 SECRET_KEY = 'thismyprojectmichyjones'
@@ -19,13 +18,15 @@ def token_required(f):
         if 'x-access-token'in request.headers:
             token = request.headers['x-access-token']
         if not token:
-            return jsonify({"message": "Token is Missing!!!"})
+            return jsonify({"Message": "Token is Missing!!!"})
         try:
             data = jwt.decode(token, SECRET_KEY)
             current_user = User.query.filter_by(email=data['email']).first()
+            g.user = current_user
         except:
-            return jsonify({"message": "Invalid Token!!"})
-        return f(current_user, *args, **kwargs)
+            return jsonify({"Message": "Invalid Token!!"})
+
+        return f(current_user, **kwargs)
 
     return decorated
 
@@ -84,7 +85,7 @@ class UserLogin(MethodView):
         if person and person.verify_password(password):
             token = jwt.encode({"email": person.email,
                                 "exp": datetime.datetime.utcnow(
-                                ) + datetime.timedelta(minutes=10)},
+                                ) + datetime.timedelta(minutes=30)},
                                SECRET_KEY)
             return make_response(jsonify({"token": token.decode('UTF-8'),
                                           "message":
@@ -94,6 +95,35 @@ class UserLogin(MethodView):
                                           "Invalid credentials"}), 401)
 
 
+class ResetPassword(MethodView):
+    @token_required
+    def post(self):
+        """ This Method resets password """
+        data = request.get_json()
+        old_password = data.get('password')
+        new_password = data.get('new_password')
+        if not old_password:
+            return make_response(jsonify({"Error":
+                                          'Please enter your Current '
+                                          'password'}), 400)
+        if len(new_password) < 8:
+            return make_response(jsonify({"Error":
+                                          'Password must be more than 8'
+                                          'characters'
+                                          }), 400)
+
+        person = User.query.filter_by(email=g.user).first()
+        if person and person.verify_password(old_password):
+            person.password = generate_password_hash(new_password, method='sha256')
+            db.session.add(person)
+            db.session.commit()
+            return make_response(jsonify({"Message":
+                                          "Password reset successfully"}), 201)
+
+        else:
+            return make_response(jsonify({"error": "Old password mismatch"}))
+
+
 user.add_url_rule(
     '/register', view_func=UserRegister.as_view(
         'register'), methods=['POST'])
@@ -101,3 +131,7 @@ user.add_url_rule(
 user.add_url_rule(
     '/login', view_func=UserLogin.as_view(
         'login'), methods=['POST'])
+
+user.add_url_rule(
+    '/reset-password', view_func=ResetPassword.as_view(
+        'reset-password'), methods=['POST'])
