@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask import Blueprint, request, make_response, jsonify, g
 
-from app.models import Book, User, db
+from app.models import Book, User, db, Borrow
 from app.users.views import token_required
 
 
@@ -135,6 +135,25 @@ class DeleteBook(MethodView):
                                           "You are not Authorized !!!"}), 401)
 
 
+class BorrowBook(MethodView):
+    @token_required
+    def get(self):
+        """This method shows borrowed books history """
+        borrows = Borrow.query.filter_by(user_email=g.user.email)
+        borrowed = []
+        for borrow_book in borrows:
+            print(borrow_book.bookid)
+            borrowed.append({
+                "id": borrow_book.id,
+                "user_email": borrow_book.user_email,
+                "bookid": borrow_book.bookid,
+                "date_borrowed": borrow_book.date_borrowed,
+                "date_returned": borrow_book.date_returned,
+                "returned": False
+            })
+        return make_response(jsonify(borrowed), 200)
+
+
 book.add_url_rule(
     '/books', view_func=Books.as_view(
         'books'), methods=['GET', 'POST'])
@@ -150,3 +169,7 @@ book.add_url_rule(
 book.add_url_rule(
     '/books/<bookid>', view_func=DeleteBook.as_view(
         'deletebook'), methods=['DELETE'])
+
+book.add_url_rule(
+    '/users/books', view_func=BorrowBook.as_view(
+        'borrowhistory'), methods=['GET'])
