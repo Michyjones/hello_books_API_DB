@@ -86,9 +86,42 @@ class GetBook(MethodView):
                 "Error": "No book with that id"}))
 
 
+class EditBook(MethodView):
+    @token_required
+    def put(self, bookid):
+        """ This Method edits book"""
+        if g.user.role == "admin":
+            data = request.get_json()
+            book_name = data.get('book_name')
+            category = data.get('category')
+
+            book = Book.query.filter_by(bookid=bookid).first()
+
+            if book:
+
+                book.book_name = book_name
+                book.category = category
+                book.availabilty = True
+                db.session.add(book)
+                db.session.commit()
+                return make_response(jsonify(
+                    {"message": "Edit successfully"
+                     }), 201)
+            else:
+                return make_response(jsonify("No book with that id"), 404)
+        else:
+            return make_response(jsonify({"Message":
+                                          "You are not Authorized !!!"}), 401)
+
+
 book.add_url_rule(
     '/books', view_func=Books.as_view(
         'books'), methods=['GET', 'POST'])
+
 book.add_url_rule(
     '/books/<bookid>', view_func=GetBook.as_view(
         'getbook'), methods=['GET'])
+
+book.add_url_rule(
+    '/books/<bookid>', view_func=EditBook.as_view(
+        'editbook'), methods=['PUT'])
