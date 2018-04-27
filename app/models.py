@@ -1,3 +1,4 @@
+from datetime import datetime
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -21,7 +22,14 @@ class User(db.Model):
 
 class Book(db.Model):
     __tablename__ = 'book'
-    id = db.Column('bookid', db.Integer, primary_key=True)
+
+    def __init__(self, bookid, book_name, category, availabilty):
+        self.bookid = bookid
+        self.book_name = book_name
+        self.category = category
+        self.availabilty = availabilty
+
+    bookid = db.Column('bookid', db.Integer, primary_key=True)
     book_name = db.Column('book_name', db.String(100))
     category = db.Column('category', db.String(50))
     availabilty = db.Column(db.Boolean, default=True)
@@ -35,4 +43,8 @@ class Borrow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String, db.ForeignKey('user.email'))
     bookid = db.Column(db.Integer, db.ForeignKey('book.bookid'))
+    date_borrowed = db.Column(
+        db.DateTime, default=datetime.now, nullable=False)
+    date_returned = db.Column(
+        db.DateTime, onupdate=datetime.now, nullable=False)
     returned = db.Column(db.Boolean, default=False)
