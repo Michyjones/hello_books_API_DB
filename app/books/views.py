@@ -153,6 +153,28 @@ class BorrowBook(MethodView):
             })
         return make_response(jsonify(borrowed), 200)
 
+    @token_required
+    def post(self, bookid):
+        """ This method borrows a single book"""
+        book = Book.query.filter_by(bookid=bookid).first()
+        if book:
+            if book.availabilty is True:
+                borrow_book = Borrow(
+                    user_email=g.user.email, bookid=bookid, returned=False)
+                book.availabilty = False
+                db.session.add(borrow_book)
+                db.session.commit()
+                return make_response(jsonify({"Message": "You have borrowed "
+                                              "a book with id {}".format(bookid
+                                                                         )}))
+
+            else:
+                return make_response(jsonify({"Message":
+                                              "The book is not available at "
+                                              "the moment"}))
+        else:
+            return make_response(jsonify({"Message": "No book with that id"}))
+
 
 book.add_url_rule(
     '/books', view_func=Books.as_view(
@@ -173,3 +195,7 @@ book.add_url_rule(
 book.add_url_rule(
     '/users/books', view_func=BorrowBook.as_view(
         'borrowhistory'), methods=['GET'])
+
+book.add_url_rule(
+    '/users/books/<bookid>', view_func=BorrowBook.as_view(
+        'borrowbook'), methods=['POST'])
