@@ -66,7 +66,29 @@ class Books(MethodView):
                                           "You are not Authorized !!!"}), 401)
 
 
+class GetBook(MethodView):
+    @token_required
+    def get(self, bookid):
+        """ This method gets a single book"""
+        book = Book.query.filter_by(bookid=bookid).first()
+        if book:
+            one_book = []
+            one_book.append({
+                "bookid": book.bookid,
+                "book_name": book.book_name,
+                "category": book.category,
+                "availabilty": book.availabilty
+            })
+            return make_response(jsonify(one_book), 200)
+
+        else:
+            return make_response(jsonify({
+                "Error": "No book with that id"}))
+
+
 book.add_url_rule(
     '/books', view_func=Books.as_view(
         'books'), methods=['GET', 'POST'])
-
+book.add_url_rule(
+    '/books/<bookid>', view_func=GetBook.as_view(
+        'getbook'), methods=['GET'])
