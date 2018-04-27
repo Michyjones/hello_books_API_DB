@@ -142,7 +142,6 @@ class BorrowBook(MethodView):
         borrows = Borrow.query.filter_by(user_email=g.user.email)
         borrowed = []
         for borrow_book in borrows:
-            print(borrow_book.bookid)
             borrowed.append({
                 "id": borrow_book.id,
                 "user_email": borrow_book.user_email,
@@ -176,6 +175,31 @@ class BorrowBook(MethodView):
             return make_response(jsonify({"Message": "No book with that id"}))
 
 
+class ReturnBook(MethodView):
+    @token_required
+    def put(self, bookid):
+        """ This method Returns a single book"""
+        book = Book.query.filter_by(bookid=bookid).first()
+        return_book = Borrow.query.filter_by(bookid=book.bookid).first()
+
+        if book:
+            if book.availabilty is False and \
+                    return_book.user_email == g.user.email:
+                book.availabilty = True
+                return_book.returned = True
+                db.session.add(return_book)
+                db.session.commit()
+                return make_response(jsonify({"Message": "You have Returned "
+                                              "a book with id {}".format(bookid
+                                                                         )}))
+
+            else:
+                return make_response(jsonify({"Message": "You have Not "
+                                              "borrowed book with that id"}))
+        else:
+            return make_response(jsonify({"Message": "No book with that id"}))
+
+
 book.add_url_rule(
     '/books', view_func=Books.as_view(
         'books'), methods=['GET', 'POST'])
@@ -199,3 +223,7 @@ book.add_url_rule(
 book.add_url_rule(
     '/users/books/<bookid>', view_func=BorrowBook.as_view(
         'borrowbook'), methods=['POST'])
+
+book.add_url_rule(
+    '/users/books/<bookid>', view_func=ReturnBook.as_view(
+        'returnbook'), methods=['PUT'])
