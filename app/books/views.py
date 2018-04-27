@@ -114,6 +114,27 @@ class EditBook(MethodView):
                                           "You are not Authorized !!!"}), 401)
 
 
+class DeleteBook(MethodView):
+    @token_required
+    def delete(self, bookid):
+        """This method delete book"""
+        if g.user.role == "admin":
+
+            book = Book.query.filter_by(bookid=bookid).first()
+            if book:
+                db.session.delete(book)
+                db.session.commit()
+
+                return make_response(jsonify({
+                    "message": "delete successful"}), 204)
+            else:
+                return make_response(jsonify({
+                    "error": "Book does not exist."}), 404)
+        else:
+            return make_response(jsonify({"Message":
+                                          "You are not Authorized !!!"}), 401)
+
+
 book.add_url_rule(
     '/books', view_func=Books.as_view(
         'books'), methods=['GET', 'POST'])
@@ -125,3 +146,7 @@ book.add_url_rule(
 book.add_url_rule(
     '/books/<bookid>', view_func=EditBook.as_view(
         'editbook'), methods=['PUT'])
+
+book.add_url_rule(
+    '/books/<bookid>', view_func=DeleteBook.as_view(
+        'deletebook'), methods=['DELETE'])
