@@ -1,11 +1,13 @@
 from flask.views import MethodView
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify, g, url_for
+from urllib.parse import urljoin
 
 from app.models import Book, User, db, Borrow
 from app.users.views import token_required
 
 
 books = {}
+borrow = {}
 book = Blueprint('book', __name__, url_prefix='/api/v2')
 
 
@@ -13,16 +15,57 @@ class Books(MethodView):
     @token_required
     def get(self):
         """This method retrieves allbooks """
-        books = Book.query.all()
-        all_books = []
-        for book in books:
-            all_books.append({
-                "bookid": book.bookid,
-                "book_name": book.book_name,
-                "category": book.category,
-                "availabilty": book.availabilty
-            })
-        return make_response(jsonify(all_books), 200)
+        page = request.args.get('page')
+        limit = request.args.get('limit')
+
+        if page and limit:
+            books = Book.query.order_by(Book.bookid).paginate(page=int(page),
+                                                              per_page=int(
+                                                                  limit),
+                                                              error_out=False)
+
+            all_books, next_url, prev_url = [], None, None
+
+            if books:
+                for book in books.items:
+                    print(books.items)
+                    all_books.append({
+                        "bookid": book.bookid,
+                        "book_name": book.book_name,
+                        "category": book.category,
+                        "availabilty": book.availabilty
+                    })
+
+                if books.has_next:
+                    next_url = urljoin("http://localhost:5000/",
+                                       "/v2/books"), url_for(
+                        "book.books",
+                        page=books.next_num,
+                        limit=books.per_page)
+
+                if books.has_prev:
+                    prev_url = (urljoin("http://localhost:5000/",
+                                        "/v2/books"), url_for(
+                        "book.books",
+                        page=books.prev_num,
+                        limit=books.per_page))
+
+                if all_books:
+                    page_details = {
+                        "start": books.page,
+                        "limit": limit,
+                        "next_page": next_url,
+                        "prev_page": prev_url,
+                        "books": all_books
+                    }
+                    return make_response(jsonify(page_details), 200)
+                else:
+                    return make_response(jsonify({"error":
+                                                  "You have no book on this page"}), 404)
+
+        else:
+            return make_response(jsonify({"error":
+                                          "Indicate page number and page limit"}), 404)
 
     @token_required
     def post(self):
@@ -32,7 +75,7 @@ class Books(MethodView):
             bookid = data.get('bookid')
             book_name = data.get('book_name')
             category = data.get('category')
-            availabilty = data.get('availabilty')
+            # availabilty = data.get('availabilty')
 
             current_user = User.query.filter_by(role='admin')
             if current_user:
@@ -53,7 +96,7 @@ class Books(MethodView):
                         {'message': 'Book  already exist'}), 409)
 
                 book = Book(bookid=bookid, book_name=book_name,
-                            category=category, availabilty=availabilty)
+                            category=category)
                 db.session.add(book)
                 db.session.commit()
                 return make_response(jsonify(
@@ -139,7 +182,27 @@ class BorrowBook(MethodView):
     @token_required
     def get(self):
         """This method shows borrowed books history """
+        # query borrowing history by returned is false
+        returned = request.args.get('returned')
+        if returned:
+            borrows = Borrow.query.filter_by(
+                returned=False, user_email=g.user.email)
+            print(borrows)
+            borrowed = []
+            for borrow_book in borrows:
+                borrowed.append({
+                    "id": borrow_book.id,
+                    "user_email": borrow_book.user_email,
+                    "bookid": borrow_book.bookid,
+                    "date_borrowed": borrow_book.date_borrowed,
+                    "date_returned": borrow_book.date_returned,
+                    "returned": borrow_book.returned
+                })
+            return make_response(jsonify(borrowed), 200)
+
+        # get borrowing history with pages and limit
         borrows = Borrow.query.filter_by(user_email=g.user.email)
+        print(borrows)
         borrowed = []
         for borrow_book in borrows:
             borrowed.append({
@@ -148,7 +211,7 @@ class BorrowBook(MethodView):
                 "bookid": borrow_book.bookid,
                 "date_borrowed": borrow_book.date_borrowed,
                 "date_returned": borrow_book.date_returned,
-                "returned": False
+                "returned": borrow_book.returned
             })
         return make_response(jsonify(borrowed), 200)
 
