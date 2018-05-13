@@ -4,7 +4,6 @@ from app import create_app
 from app.models import db
 
 
-
 class UserAuthentication(unittest.TestCase):
 
     def setUp(self):
@@ -66,16 +65,16 @@ class UserAuthentication(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_register_user_exist(self):
-        user = {"email": "michyjones@gmail.com", "password": "password",
+        user = {"email": "michyjones@gmail.com", "password": "qwerty12345",
                 "role": "user"}
         self.client.post(
-            "/api/v2/auth/register", data=user,
+            "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
         response = self.client.post(
-            "/api/v2/auth/register", data=user,
+            "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
 
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.status_code, 200)
 
     def test_register_user(self):
         user = {"email": "michyjone@gmail.com", "password": "qwerty12345",
@@ -103,14 +102,14 @@ class UserAuthentication(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_login_user_invalid_credentials(self):
-        user = {"email": "michy@gmail.com",
-                "password": "password", "role": "user"}
+        user = {"email": "nevermind@gmail.com",
+                "password": "qwerty122345", "role": "user"}
         self.client.post(
-            "/api/v2/auth/register", data=user,
+            "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
         user = {"email": "admin@gmail.com", "password": "asdfghsg"}
         response = self.client.post(
-            "/api/v2/auth/login", data=user,
+            "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
         self.assertEqual(response.status_code, 401)
 
@@ -133,10 +132,8 @@ class UserAuthentication(unittest.TestCase):
     def test_admin_create_book(self):
         book = {'bookid': "666", "book_name": "Introductionto flask",
                 "category": "Engineering"}
-        print(book)
         response = self.client.post(
             "/api/v2/books", data=json.dumps(book), headers=self.headers)
-        print("ffffff", response.data)
         self.assertEqual(response.status_code, 201)
 
     def test_admin_updates_a_book(self):
@@ -163,30 +160,63 @@ class UserAuthentication(unittest.TestCase):
         self.assertEqual(response.status_code, 204)
 
     def test_can_get_all_books(self):
-        books = {"bookid": "001", "bookname": "Introductionto bootstrap",
-                 "bookid": "002", "bookname": "Introduction to programming",
-                 "bookid": "003", "bookname": "Introduction to javascript",
-                 "bookid": "004", "bookname": "Introduction to flask",
-                 "bookid": "005", "bookname": "Web development"}
+        books = {"bookid": "002", "book_name":
+                 "Introduction to programming",
+                 "category": "Engineering"}
+        self.client.post("/api/v2/books", data=json.dumps(books),
+                         headers=self.headers)
+        # books = {"bookid": "002", "book_name":
+        #          "Introduction to programming",
+        #          "category": "Engineering"}
         response = self.client.get(
-            "/api/v2/books", data=json.dumps(books), headers=self.headers)
+            "/api/v2/books/002", data=json.dumps(books), headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
     def test_user_can_borrow_book(self):
         book = {"bookid": "004", "bookname": "Introduction to flask",
                 "category": "software"}
-        self.client.post("/api/v1/books", data=book,
+        self.client.post("/api/v2/books", data=book,
                          headers=self.headers)
         response = self.client.post(
             "/api/v2/users/books/004", data=book,
             headers=self.headers)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
 
     def test_user_can_get_a_book(self):
-        # create book first stop cartoning
         book = {"bookid": "002", "bookname": "Introduction to programming"}
+        self.client.post("/api/v2/books", data=book,
+                         headers=self.headers)
         response = self.client.get(
-            "/api/v2/books/<bookid>", data=book,
+            "/api/v2/books/002", data=book,
+            headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_can_get_borrowed_book(self):
+        book = {"bookid": "002", "bookname": "Introduction to programming"}
+        self.client.post("/api/v2/books", data=json.dumps(book),
+                         headers=self.headers)
+        response = self.client.get(
+            "/api/v2/users/books", data=json.dumps(book),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_can_not_borrow_borroewd_book(self):
+        book = {"bookid": "002", "bookname": "Introduction to programming"}
+        self.client.post("/api/v2/books", data=json.dumps(book),
+                         headers=self.headers)
+        response = self.client.post(
+            "/api/v2/users/books/007", data=json.dumps(book),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_user_can_get_borrowed_history(self):
+        book = {"bookid": "002", "bookname": "Introduction to programming",
+                "bookid": "004", "bookname": "Introduction to flask",
+                "category": "software"}
+        self.client.post("/api/v2/books", data=json.dumps(book),
+                         headers=self.headers)
+        response = self.client.get(
+            "/api/v2/users/books", data=json.dumps(book),
             headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
