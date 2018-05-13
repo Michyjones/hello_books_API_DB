@@ -23,11 +23,10 @@ class User(db.Model):
 class Book(db.Model):
     __tablename__ = 'book'
 
-    def __init__(self, bookid, book_name, category, availabilty):
+    def __init__(self, bookid, book_name, category):
         self.bookid = bookid
         self.book_name = book_name
         self.category = category
-        self.availabilty = availabilty
 
     bookid = db.Column('bookid', db.Integer, primary_key=True)
     book_name = db.Column('book_name', db.String(100))
@@ -48,3 +47,21 @@ class Borrow(db.Model):
     date_returned = db.Column(
         db.DateTime, onupdate=datetime.now, nullable=False)
     returned = db.Column(db.Boolean, default=False)
+
+
+class BlacklistedToken(db.Model):
+    """
+    Create a table for blacklisted tokens
+    """
+    __tablename__ = "blacklisted"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String, db.ForeignKey('user.email'))
+    token = db.column(db.String)
+    blacklisted = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token):
+        """Initialize token blacklist"""
+        self.token = token
+        self.blacklisted = datetime.utcnow()
+
