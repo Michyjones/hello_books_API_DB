@@ -49,19 +49,4 @@ class Borrow(db.Model):
     returned = db.Column(db.Boolean, default=False)
 
 
-class BlacklistedToken(db.Model):
-    """
-    Create a table for blacklisted tokens
-    """
-    __tablename__ = "blacklisted"
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.String, db.ForeignKey('user.email'))
-    token = db.column(db.String)
-    blacklisted = db.Column(db.DateTime, nullable=False)
-
-    def __init__(self, token):
-        """Initialize token blacklist"""
-        self.token = token
-        self.blacklisted = datetime.utcnow()
 
