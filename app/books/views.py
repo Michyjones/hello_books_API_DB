@@ -228,14 +228,14 @@ class BorrowBook(MethodView):
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have borrowed "
                                               "a book with id {}".format(bookid
-                                                                         )}))
+                                                                         )}), 200)
 
             else:
                 return make_response(jsonify({"Message":
                                               "The book is not available at "
-                                              "the moment"}))
+                                              "the moment"}), 400)
         else:
-            return make_response(jsonify({"Message": "No book with that id"}))
+            return make_response(jsonify({"Message": "No book with that id"}), 400)
 
 
 class ReturnBook(MethodView):
@@ -254,13 +254,13 @@ class ReturnBook(MethodView):
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have Returned "
                                               "a book with id {}".format(bookid
-                                                                         )}))
+                                                                         )}),200)
 
             else:
                 return make_response(jsonify({"Message": "You have Not "
-                                              "borrowed book with that id"}))
+                                              "borrowed book with that id"}), 400)
         else:
-            return make_response(jsonify({"Message": "No book with that id"}))
+            return make_response(jsonify({"Message": "No book with that id"}), 400)
 
 
 book.add_url_rule(
