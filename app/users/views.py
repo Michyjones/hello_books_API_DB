@@ -1,11 +1,11 @@
-from flask import Blueprint, request, make_response, jsonify, session, g
+from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from functools import wraps
 import jwt
 import re
 import datetime
 
-from app.models import User, db, generate_password_hash
+from app.models import User, db, generate_password_hash, BlacklistedToken
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
 SECRET_KEY = 'thismyprojectmichyjones'
@@ -15,8 +15,8 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        if 'x-access-token'in request.headers:
-            token = request.headers['x-access-token']
+        if 'token'in request.headers:
+            token = request.headers['token']
         if not token:
             return jsonify({"Message": "Token is Missing!!!"})
         try:
