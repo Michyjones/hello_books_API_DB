@@ -1,17 +1,34 @@
 import unittest
-import run
+import json
 from app import create_app
 from app.models import db
+
 
 
 class UserAuthentication(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app(config_name="testing")
-        self.client = run.app.test_client()
+        self.client = self.app.test_client()
         with self.app.app_context():
+
             db.drop_all()
             db.create_all()
+
+        user = {"email": "mbuguamike@gmail.com", "password": "qwerty12345",
+                "role": "admin"}
+        self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        user1 = {"email": "mbuguamike@gmail.com", "password": "qwerty12345"}
+        response = self.client.post(
+            "/api/v2/auth/login", data=json.dumps(user1),
+            content_type="application/json")
+        print(json.loads(response.data.decode()))
+
+        self.token = json.loads(response.data.decode())['token']
+        self.headers = {'Content-Type': 'application/json',
+                        'token': self.token}
 
     def test_register_user_email_isnot_null(self):
         user = {"email": None, "password": "password",
@@ -65,22 +82,23 @@ class UserAuthentication(unittest.TestCase):
                 "role": "user"}
 
         response = self.client.post(
-            "/api/v2/auth/register", data=user,
+            "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
 
         self.assertEqual(response.status_code, 201)
 
     def test_login_user(self):
 
-        user = {"email": "michyjones@gmail.com",
-                "password": "password", "role": "user"}
+        user = {"email": "peterjohn@gmail.com",
+                "password": "qwerty12345", "role": "user"}
         self.client.post(
-            "/api/v1/auth/register", data=user,
+            "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
-        user = {"email": "michyjones@gmail.com", "password": "password"}
+        user = {"email": "peterjohn@gmail.com", "password": "qwerty12345"}
         response = self.client.post(
-            "/api/v2/auth/login", data=user,
+            "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
+        print("asdfg", response.data)
 
         self.assertEqual(response.status_code, 200)
 
@@ -108,26 +126,28 @@ class UserAuthentication(unittest.TestCase):
         user = {"email": "michyjones@gmail.com", "password": None,
                 "role": "user"}
         response = self.client.post(
-            "/api/v1/auth/login", data=user,
+            "/api/v2/auth/login", data=user,
             content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
     def test_admin_create_book(self):
-        book = {"bookid": "007", "book_name": "Introductionto flask",
+        book = {'bookid': "666", "book_name": "Introductionto flask",
                 "category": "Engineering"}
+        print(book)
         response = self.client.post(
-            "/api/v2/books", data=book, content_type="application/json")
-        print(response.data)
+            "/api/v2/books", data=json.dumps(book), headers=self.headers)
+        print("ffffff", response.data)
         self.assertEqual(response.status_code, 201)
 
     def test_admin_updates_a_book(self):
         book = {"bookid": "004", "book_name": "Introductionto flask",
                 "category": "Engineering"}
         self.client.post(
-            "/api/v2/books", data=book, content_type="application/json")
+            "/api/v2/books", data=json.dumps(book), headers=self.headers)
+
         book = {"book_name": "flask", "category": "software"}
         response = self.client.put(
-            "/api/v2/books/004", data=book, content_type="application/json")
+            "/api/v2/books/004", data=json.dumps(book), headers=self.headers)
         print(response.data)
 
         self.assertEqual(response.status_code, 201)
@@ -136,11 +156,10 @@ class UserAuthentication(unittest.TestCase):
         book = {"bookid": "002", "book_name":
                 "Introduction to programming",
                 "category": "Engineering"}
-        self.client.post("/api/v1/books", data=book,
-                         content_type="application/json")
+        self.client.post("/api/v2/books", data=json.dumps(book),
+                         headers=self.headers)
         response = self.client.delete(
-            "/api/v2/books/002", data=book, content_type="application/json")
-        print(response.data)
+            "/api/v2/books/002", data=json.dumps(book), headers=self.headers)
         self.assertEqual(response.status_code, 204)
 
     def test_can_get_all_books(self):
@@ -150,25 +169,27 @@ class UserAuthentication(unittest.TestCase):
                  "bookid": "004", "bookname": "Introduction to flask",
                  "bookid": "005", "bookname": "Web development"}
         response = self.client.get(
-            "/api/v2/books", data=books, content_type="application/json")
+            "/api/v2/books", data=json.dumps(books), headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
     def test_user_can_borrow_book(self):
         book = {"bookid": "004", "bookname": "Introduction to flask",
                 "category": "software"}
         self.client.post("/api/v1/books", data=book,
-                         content_type="application/json")
+                         headers=self.headers)
         response = self.client.post(
             "/api/v2/users/books/004", data=book,
-            content_type="application/json")
+            headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
     def test_user_can_get_a_book(self):
+        # create book first stop cartoning
         book = {"bookid": "002", "bookname": "Introduction to programming"}
         response = self.client.get(
             "/api/v2/books/<bookid>", data=book,
-            content_type="application/json")
+            headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
     def tearDown(self):
-        self.client = None
+        with self.app.app_context():
+            db.drop_all()
