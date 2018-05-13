@@ -5,7 +5,7 @@ import jwt
 import re
 import datetime
 
-from app.models import User, db, generate_password_hash, BlacklistedToken
+from app.models import User, db, generate_password_hash
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
 SECRET_KEY = 'thismyprojectmichyjones'
