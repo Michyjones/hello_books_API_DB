@@ -151,17 +151,49 @@ class ChangePassword(MethodView):
                                           'Password must be more than 8'
                                           'characters'
                                           }), 400)
-
-        person = User.query.filter_by(email=g.user).first()
+        person = User.query.filter_by(email=g.user.email).first()
         if person and person.verify_password(old_password):
-            person.password = generate_password_hash(new_password, method='sha256')
-            db.session.add(person)
-            db.session.commit()
+            person.password = generate_password_hash(
+                new_password, method='sha256')
+            person.save()
             return make_response(jsonify({"Message":
-                                          "Password reset successfully"}), 201)
+                                          "Password reset successfully"}), 200)
 
         else:
-            return make_response(jsonify({"error": "Old password mismatch"}))
+            return make_response(jsonify({"error": "Old password mismatch"}),
+                                 400)
+
+
+class ResetPassword(MethodView):
+    def post(self):
+        """
+        This method is used to reset user's password when forgotten.
+        It sends an email with the new auto generated password
+        """
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return make_response(jsonify({"error": "Please enter your email address"}), 400)
+
+        if not User.exists(email=email):
+            return make_response(jsonify({"error": 'Email not found!'}), 400)
+
+        password = str(uuid.uuid4())[:8]
+
+        person = User.query.filter_by(email=email).first()
+        alert = send_mail(email, password)
+
+        if not alert:
+            return make_response(jsonify({"error": 'Password was not reset.'
+                                          ' Please try resetting it again'}),
+                                 500)
+        person.password = generate_password_hash(
+            password, method='sha256')
+
+        person.save()
+        return make_response(jsonify({"message": 'An email has been sent with '
+                                      'instructions for ''your new password'}), 201)
 
 
 user.add_url_rule(
@@ -172,6 +204,13 @@ user.add_url_rule(
     '/login', view_func=UserLogin.as_view(
         'login'), methods=['POST'])
 
+user.add_url_rule(
+    '/change-password', view_func=ChangePassword.as_view(
+        'change-password'), methods=['POST'])
+
+user.add_url_rule(
+    '/logout', view_func=LogoutUser.as_view(
+        'logout'), methods=['POST'])
 user.add_url_rule(
     '/reset-password', view_func=ResetPassword.as_view(
         'reset-password'), methods=['POST'])
