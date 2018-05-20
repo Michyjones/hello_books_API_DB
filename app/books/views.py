@@ -28,7 +28,6 @@ class Books(MethodView):
 
             if books:
                 for book in books.items:
-                    print(books.items)
                     all_books.append({
                         "bookid": book.bookid,
                         "book_name": book.book_name,
@@ -75,7 +74,6 @@ class Books(MethodView):
             bookid = data.get('bookid')
             book_name = data.get('book_name')
             category = data.get('category')
-            # availabilty = data.get('availabilty')
 
             current_user = User.query.filter_by(role='admin')
             if current_user:
@@ -102,8 +100,6 @@ class Books(MethodView):
                 return make_response(jsonify(
                     {"message": "Book Added successfully"
                      }), 201)
-            else:
-                return jsonify('go')
         else:
             return make_response(jsonify({"Message":
                                           "You are not Authorized !!!"}), 401)
@@ -126,7 +122,7 @@ class GetBook(MethodView):
 
         else:
             return make_response(jsonify({
-                "Error": "No book with that id"}))
+                "Error": "No book with that id"}), 400)
 
 
 class EditBook(MethodView):
@@ -169,7 +165,7 @@ class DeleteBook(MethodView):
                 db.session.commit()
 
                 return make_response(jsonify({
-                    "message": "delete successful"}), 204)
+                    "Message": "delete successful"}), 204)
             else:
                 return make_response(jsonify({
                     "error": "Book does not exist."}), 404)
@@ -202,7 +198,6 @@ class BorrowBook(MethodView):
 
         # get borrowing history with pages and limit
         borrows = Borrow.query.filter_by(user_email=g.user.email)
-        print(borrows)
         borrowed = []
         for borrow_book in borrows:
             borrowed.append({
@@ -254,7 +249,7 @@ class ReturnBook(MethodView):
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have Returned "
                                               "a book with id {}".format(bookid
-                                                                         )}),200)
+                                                                         )}), 200)
 
             else:
                 return make_response(jsonify({"Message": "You have Not "
