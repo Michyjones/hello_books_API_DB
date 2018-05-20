@@ -134,7 +134,7 @@ class UserAuthentication(unittest.TestCase):
             "/api/v2/auth/logout", data=user, headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
-    def test_user_can_reset_password(self):
+    def test_user_can_change_password(self):
         user = {"email": "michyjones@gmail.com",
                 "password": "qwerty122345", "role": "user"}
         self.client.post(
@@ -142,11 +142,11 @@ class UserAuthentication(unittest.TestCase):
             content_type="application/json")
         user = {"email": "michyjones@gmail.com", "password": "newpass12345"}
         response = self.client.post(
-            "/api/v2/auth/reset-password", data=json.dumps(user),
+            "/api/v2/auth/change-password", data=json.dumps(user),
             content_type="application/json")
         self.assertEqual(response.status_code, 200)
 
-    def test_user_can_not_reset_password_without_oldpass(self):
+    def test_user_can_not_change_password_without_oldpass(self):
         user = {"email": "michyjones@gmail.com",
                 "password": "qwerty122345", "role": "user"}
         self.client.post(
@@ -154,7 +154,7 @@ class UserAuthentication(unittest.TestCase):
             content_type="application/json")
         user1 = {"email": "michyjones@gmail.com", "password": "newpass123456"}
         response = self.client.post(
-            "/api/v2/auth/reset-password", data=json.dumps(user1),
+            "/api/v2/auth/change-password", data=json.dumps(user1),
             content_type="application/json")
         self.assertEqual(response.status_code, 200)
 
@@ -207,16 +207,6 @@ class UserAuthentication(unittest.TestCase):
         response = self.client.delete(
             "/api/v2/books/004", data=json.dumps(book), headers=self.headers)
         self.assertEqual(response.status_code, 404)
-
-    def test_can_get_all_books(self):
-        books = {"bookid": "002", "book_name":
-                 "Introduction to programming",
-                 "category": "Engineering"}
-        self.client.post("/api/v2/books", data=json.dumps(books),
-                         headers=self.headers)
-        response = self.client.get(
-            "/api/v2/books", data=json.dumps(books), headers=self.headers)
-        self.assertEqual(response.status_code, 200)
 
     def test_can_get_a_book(self):
         books = {"bookid": "002", "book_name":
