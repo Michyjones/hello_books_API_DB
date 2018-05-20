@@ -19,6 +19,19 @@ class User(db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password, password)
 
+    @staticmethod
+    def exists(email):
+        """
+        Used to check if the user exists in the database
+        """
+        person = User.query.filter_by(email=email).first()
+        return True if person else False
+        
+    def save(self):
+        """Save  to the database"""
+        db.session.add(self)
+        db.session.commit()
+
 
 class Book(db.Model):
     __tablename__ = 'book'
@@ -45,8 +58,24 @@ class Borrow(db.Model):
     date_borrowed = db.Column(
         db.DateTime, default=datetime.now, nullable=False)
     date_returned = db.Column(
-        db.DateTime, onupdate=datetime.now, nullable=False)
+        db.DateTime, onupdate=datetime.now, nullable=True)
     returned = db.Column(db.Boolean, default=False)
 
 
+class BlacklistedToken(db.Model):
+    """All blacklisted tokens"""
+    __tablename__ = 'blacklist'
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(200), nullable=False)
+    valid = db.Column(db.Boolean, nullable=False)
+
+    def __init__(self, token, valid=True):
+        self.token = token
+        self.valid = valid
+
+    def save(self):
+        """Save  to the database"""
+        db.session.add(self)
+        db.session.commit()
 
