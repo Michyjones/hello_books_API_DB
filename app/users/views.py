@@ -1,11 +1,15 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from functools import wraps
+from smtplib import SMTP, SMTPException
 import jwt
 import re
+import os
 import datetime
+import uuid
 
-from app.models import User, db, generate_password_hash
+
+from app.models import User, db, generate_password_hash, BlacklistedToken
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
 SECRET_KEY = 'thismyprojectmichyjones'
@@ -29,6 +33,28 @@ def token_required(f):
         return f(current_user, **kwargs)
 
     return decorated
+
+
+def send_mail(recipient, password):
+    print (password)
+    """
+    This method is used to send an email while resetting the password
+    """
+    sender = os.getenv('EMAIL')
+    pwd = os.getenv('PASSWORD')
+    print (sender)
+    message = "Your new password is %s" % password
+    try:
+        server = SMTP("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.login(sender, pwd)
+        server.sendmail(sender, recipient, message)
+        server.close()
+        return True
+
+    except SMTPException:
+        return False
 
 
 class UserRegister(MethodView):
@@ -66,8 +92,7 @@ class UserRegister(MethodView):
                 "error": "User already exist"
             }))
         new_user = User(email=email, password=password, role=role)
-        db.session.add(new_user)
-        db.session.commit()
+        new_user.save()
         return make_response(jsonify({
             "message": "user_created successfully"
         }), 201)
@@ -87,6 +112,7 @@ class UserLogin(MethodView):
                                 "exp": datetime.datetime.utcnow(
                                 ) + datetime.timedelta(minutes=30)},
                                SECRET_KEY)
+            BlacklistedToken(token.decode('UTF-8')).save()
             return make_response(jsonify({"token": token.decode('UTF-8'),
                                           "message":
                                           "User login successfully"}), 200)
@@ -95,7 +121,21 @@ class UserLogin(MethodView):
                                           "Invalid credentials"}), 401)
 
 
-class ResetPassword(MethodView):
+class LogoutUser(MethodView):
+    @token_required
+    def post(self):
+        """Logs out the user and add token to blacklist"""
+        requests = request.headers['token']
+        tokens = BlacklistedToken.query.filter_by(token=requests).first()
+        if tokens and tokens.valid is True:
+            tokens.valid = False
+            tokens.save()
+            return make_response(jsonify({'success': 'logged out'}), 200)
+        return make_response(jsonify({'message': 'Your session has expired!'}),
+                             401)
+
+
+class ChangePassword(MethodView):
     @token_required
     def post(self):
         """ This Method resets password """
