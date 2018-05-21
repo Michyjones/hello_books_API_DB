@@ -15,8 +15,8 @@ class Books(MethodView):
     @token_required
     def get(self):
         """This method retrieves allbooks """
-        page = request.args.get('page')
-        limit = request.args.get('limit')
+        page = request.args.get('page', default=1, type=int)
+        limit = request.args.get('limit', default=3, type=int)
 
         if page and limit:
             books = Book.query.order_by(Book.bookid).paginate(page=int(page),
@@ -62,9 +62,9 @@ class Books(MethodView):
                     return make_response(jsonify({"error":
                                                   "You have no book on this page"}), 404)
 
-        else:
-            return make_response(jsonify({"error":
-                                          "Indicate page number and page limit"}), 404)
+    #     else:
+    #         return make_response(jsonify({"error":
+    #                                       "Indicate page number and page limit"}), 404)
 
     @token_required
     def post(self):
