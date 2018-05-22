@@ -22,11 +22,10 @@ class Userbooks(unittest.TestCase):
         response = self.client.post(
             "/api/v2/auth/login", data=json.dumps(user1),
             content_type="application/json")
-        print(json.loads(response.data.decode()))
-
         self.token = json.loads(response.data.decode())['token']
-        self.headers = {'Content-Type': 'application/json',
-                        'token': self.token}
+        self.headers = {'Content-Type': 'application/json', 'Authorization':
+                        'Bearer {}'.format(self.token)
+                        }
 
     def test_admin_create_book(self):
         book = {'bookid': "666", "book_name": "Introductionto flask",
@@ -87,6 +86,17 @@ class Userbooks(unittest.TestCase):
                          headers=self.headers)
         response = self.client.get(
             "/api/v2/books/002", data=json.dumps(books), headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+
+    def test_can_get_all_book(self):
+        books = {"bookid": "002", "book_name":
+                 "Introduction to programming",
+                 "category": "Engineering"
+                 }
+        self.client.post("/api/v2/books", data=json.dumps(books),
+                         headers=self.headers)
+        response = self.client.get(
+            "/api/v2/books", data=json.dumps(books), headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
     def test_can_not_get_a_book_without_correct_id(self):
