@@ -60,11 +60,9 @@ class Books(MethodView):
                     return make_response(jsonify(page_details), 200)
                 else:
                     return make_response(jsonify({"error":
-                                                  "You have no book on this page"}), 404)
 
-    #     else:
-    #         return make_response(jsonify({"error":
-    #                                       "Indicate page number and page limit"}), 404)
+                                                  "You have no book on "
+                                                  "this page"}), 404)
 
     @token_required
     def post(self):
@@ -196,7 +194,7 @@ class BorrowBook(MethodView):
                 })
             return make_response(jsonify(borrowed), 200)
 
-        # get borrowing history with pages and limit
+        # get borrowing history
         borrows = Borrow.query.filter_by(user_email=g.user.email)
         borrowed = []
         for borrow_book in borrows:
@@ -223,14 +221,16 @@ class BorrowBook(MethodView):
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have borrowed "
                                               "a book with id {}".format(bookid
-                                                                         )}), 200)
+                                                                         )}),
+                                     200)
 
             else:
                 return make_response(jsonify({"Message":
                                               "The book is not available at "
                                               "the moment"}), 400)
         else:
-            return make_response(jsonify({"Message": "No book with that id"}), 400)
+            return make_response(jsonify({"Message": "No book with that id"}),
+                                 400)
 
 
 class ReturnBook(MethodView):
@@ -249,13 +249,16 @@ class ReturnBook(MethodView):
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have Returned "
                                               "a book with id {}".format(bookid
-                                                                         )}), 200)
+                                                                         )}),
+                                     200)
 
             else:
                 return make_response(jsonify({"Message": "You have Not "
-                                              "borrowed book with that id"}), 400)
+                                              "borrowed book with that id"}),
+                                     400)
         else:
-            return make_response(jsonify({"Message": "No book with that id"}), 400)
+            return make_response(jsonify({"Message": "No book with that id"}),
+                                 400)
 
 
 book.add_url_rule(
