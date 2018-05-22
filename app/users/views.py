@@ -9,7 +9,7 @@ import datetime
 import uuid
 
 
-from app.models import User, db, generate_password_hash, BlacklistedToken
+from app.models import User, generate_password_hash, BlacklistedToken
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
 SECRET_KEY = 'thismyprojectmichyjones'
@@ -18,13 +18,11 @@ SECRET_KEY = 'thismyprojectmichyjones'
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
-        if 'token'in request.headers:
-            token = request.headers['token']
+        token = request.headers.get("Authorization")
         if not token:
             return jsonify({"Message": "Token is Missing!!!"})
         try:
-            data = jwt.decode(token, SECRET_KEY)
+            data = jwt.decode(token[7:], SECRET_KEY)
             current_user = User.query.filter_by(email=data['email']).first()
             g.user = current_user
         except:
@@ -36,13 +34,11 @@ def token_required(f):
 
 
 def send_mail(recipient, password):
-    print (password)
     """
     This method is used to send an email while resetting the password
     """
     sender = os.getenv('EMAIL')
     pwd = os.getenv('PASSWORD')
-    print (sender)
     message = "Your new password is %s" % password
     try:
         server = SMTP("smtp.gmail.com", 587)
@@ -125,7 +121,7 @@ class LogoutUser(MethodView):
     @token_required
     def post(self):
         """Logs out the user and add token to blacklist"""
-        requests = request.headers['token']
+        requests = request.headers.get("Authorization")['token']
         tokens = BlacklistedToken.query.filter_by(token=requests).first()
         if tokens and tokens.valid is True:
             tokens.valid = False
@@ -157,7 +153,8 @@ class ChangePassword(MethodView):
                 new_password, method='sha256')
             person.save()
             return make_response(jsonify({"Message":
-                                          "Password reset successfully"}), 200)
+                                          "Password Changed successfully"}),
+                                 200)
 
         else:
             return make_response(jsonify({"error": "Old password mismatch"}),
@@ -174,10 +171,11 @@ class ResetPassword(MethodView):
         email = data.get('email')
 
         if not email:
-            return make_response(jsonify({"error": "Please enter your email address"}), 400)
+            return make_response(jsonify({"Error": "Please enter "
+                                          "your email address"}), 400)
 
         if not User.exists(email=email):
-            return make_response(jsonify({"error": 'Email not found!'}), 400)
+            return make_response(jsonify({"Error": "Email not found!"}), 400)
 
         password = str(uuid.uuid4())[:8]
 
@@ -185,15 +183,16 @@ class ResetPassword(MethodView):
         alert = send_mail(email, password)
 
         if not alert:
-            return make_response(jsonify({"error": 'Password was not reset.'
-                                          ' Please try resetting it again'}),
-                                 500)
+            return make_response(jsonify({"Error": "Password was not reset."
+                                          " Please try resetting it "
+                                          "again later"}), 500)
         person.password = generate_password_hash(
             password, method='sha256')
 
         person.save()
-        return make_response(jsonify({"message": 'An email has been sent with '
-                                      'instructions for ''your new password'}), 201)
+        return make_response(jsonify({"Message": "An email has been sent with "
+                                      "instructions to your password"}),
+                             201)
 
 
 user.add_url_rule(
