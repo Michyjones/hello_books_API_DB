@@ -19,12 +19,10 @@ class UserAuthentication(unittest.TestCase):
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
-        user1 = {"email": "mbuguamike@gmail.com", "password": "qwerty12345"}
+        # user1 = {"email": "mbuguamike@gmail.com", "password": "qwerty12345"}
         response = self.client.post(
-            "/api/v2/auth/login", data=json.dumps(user1),
+            "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
-        print(json.loads(response.data.decode()))
-
         self.token = json.loads(response.data.decode())['token']
         self.headers = {'Content-Type': 'application/json',
                         'token': self.token}
@@ -147,17 +145,16 @@ class UserAuthentication(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_user_can_not_change_password_without_oldpass(self):
-        user = {"email": "michyjones@gmail.com",
+        user = {"email": "michyjones5@gmail.com",
                 "password": "qwerty122345", "role": "user"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
-        user1 = {"email": "michyjones@gmail.com", "password": "newpass123456"}
         response = self.client.post(
-            "/api/v2/auth/change-password", data=json.dumps(user1),
+            "/api/v2/auth/change-password", data=json.dumps(user),
             content_type="application/json")
         self.assertEqual(response.status_code, 200)
-        
+
     def tearDown(self):
         with self.app.app_context():
             db.drop_all()
