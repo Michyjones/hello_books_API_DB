@@ -126,13 +126,13 @@ class UserAuthentication(unittest.TestCase):
             content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
-    def test_user_can_logout(self):
+    def test_logout(self):
         user = {"email": "michyjones@gmail.com", "password": "qwerty122345"}
         response = self.client.post(
             "/api/v2/auth/logout", data=user, headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
-    def test_user_can_change_password(self):
+    def test_change_password(self):
         user = {"email": "michyjones@gmail.com",
                 "password": "qwerty122345", "role": "user"}
         self.client.post(
@@ -144,7 +144,7 @@ class UserAuthentication(unittest.TestCase):
             content_type="application/json")
         self.assertEqual(response.status_code, 200)
 
-    def test_user_can_not_change_password_without_oldpass(self):
+    def test_change_password_without_oldpass(self):
         user = {"email": "michyjones5@gmail.com",
                 "password": "qwerty122345", "role": "user"}
         self.client.post(
