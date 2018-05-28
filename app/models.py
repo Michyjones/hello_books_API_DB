@@ -6,14 +6,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class User(db.Model):
     __tablename__ = 'user'
 
-    def __init__(self, email, password, role):
+    def __init__(self, email, password, IsAdmin=False):
         self.email = email
         self.password = generate_password_hash(password, method='sha256')
-        self.role = role
+        self.IsAdmin = IsAdmin
 
     email = db.Column(db.String(50), primary_key=True)
     password = db.Column(db.String(128))
-    role = db.Column(db.String(20))
+    IsAdmin = db.Column(db.Boolean, default=False)
     borrows = db.relationship('Borrow', backref='user', lazy='dynamic')
 
     def verify_password(self, password):
@@ -26,7 +26,7 @@ class User(db.Model):
         """
         person = User.query.filter_by(email=email).first()
         return True if person else False
-        
+
     def save(self):
         """Save  to the database"""
         db.session.add(self)
@@ -68,7 +68,7 @@ class BlacklistedToken(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(200), nullable=False)
-    valid = db.Column(db.Boolean, nullable=False)
+    valid = db.Column(db.Boolean, default=True)
 
     def __init__(self, token, valid=True):
         self.token = token
@@ -78,4 +78,3 @@ class BlacklistedToken(db.Model):
         """Save  to the database"""
         db.session.add(self)
         db.session.commit()
-
