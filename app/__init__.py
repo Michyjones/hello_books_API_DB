@@ -37,5 +37,11 @@ def create_app(config_name):
             'URL': 'Not Allowed : ' + request.url}
         return jsonify(message), 405
 
-    return app
+    @app.errorhandler(400)
+    def Badrequest(error=None):
+        """Method for not allowed endpoints."""
+        message = {
+            "Error": "Bad request. Enter data in JSON format"}
+        return jsonify(message), 400
 
+    return app
