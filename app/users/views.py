@@ -9,7 +9,7 @@ import datetime
 import uuid
 
 
-from app.models import User, generate_password_hash, BlacklistedToken
+from app.models import User, db, generate_password_hash, BlacklistedToken
 
 user = Blueprint('user', __name__, url_prefix='/api/v2/auth')
 SECRET_KEY = 'thismyprojectmichyjones'
@@ -60,7 +60,6 @@ class UserRegister(MethodView):
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-        role = data.get('role')
         valid_email = re.match(
             "(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
             email.strip())
@@ -72,11 +71,7 @@ class UserRegister(MethodView):
         if password is None:
             return make_response(jsonify({'error': 'Enter password'}), 400)
 
-        if (role != 'user') and (role != 'admin'):
-            return make_response(jsonify(
-                {'error': 'Role can only be user or admin'}), 400)
-
-        if len(password) < 8:
+        if len(password.strip()) < 8:
 
             return make_response(jsonify(
                 {'message': 'password should be more than 8 character'}), 400)
@@ -87,7 +82,7 @@ class UserRegister(MethodView):
             return make_response(jsonify({
                 "error": "User already exist"
             }))
-        new_user = User(email=email, password=password, role=role)
+        new_user = User(email=email.strip(), password=password)
         new_user.save()
         return make_response(jsonify({
             "message": "user_created successfully"
@@ -100,6 +95,10 @@ class UserLogin(MethodView):
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
+
+        if not request.get_json():
+            return make_response(jsonify({"Error": "Bad request. Enter "
+                                          "data in JSON format"}), 400)
 
         person = User.query.filter_by(email=email).first()
 
@@ -121,11 +120,13 @@ class LogoutUser(MethodView):
     @token_required
     def post(self):
         """Logs out the user and add token to blacklist"""
-        requests = request.headers.get("Authorization")['token']
-        tokens = BlacklistedToken.query.filter_by(token=requests).first()
-        if tokens and tokens.valid is True:
-            tokens.valid = False
-            tokens.save()
+        header = request.headers['Authorization']
+        blacklist= BlacklistedToken.query.filter_by(token=header).first()
+        if blacklist and blacklist is True:
+            blacklisted = BlacklistedToken(token=header, valid=False)
+            blacklist.valid = False
+            db.session.add(blacklisted)
+            db.session.commit()
             return make_response(jsonify({'success': 'logged out'}), 200)
         return make_response(jsonify({'message': 'Your session has expired!'}),
                              401)
