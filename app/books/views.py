@@ -67,13 +67,13 @@ class Books(MethodView):
     @token_required
     def post(self):
         """This method add a book"""
-        if g.user.role == "admin":
+        if g.user.IsAdmin == True:
             data = request.get_json()
             bookid = data.get('bookid')
             book_name = data.get('book_name')
             category = data.get('category')
 
-            current_user = User.query.filter_by(role='admin')
+            current_user = User.query.filter_by(IsAdmin='admin')
             if current_user:
                 if bookid == '':
                     return make_response(jsonify(
@@ -107,6 +107,10 @@ class GetBook(MethodView):
     @token_required
     def get(self, bookid):
         """ This method gets a single book"""
+        try:
+            bookid = int(bookid)
+        except ValueError:
+            return jsonify({"Message": "Use a valid books Id"})
         book = Book.query.filter_by(bookid=bookid).first()
         if book:
             one_book = []
@@ -127,7 +131,7 @@ class EditBook(MethodView):
     @token_required
     def put(self, bookid):
         """ This Method edits book"""
-        if g.user.role == "admin":
+        if g.user.IsAdmin == True:
             data = request.get_json()
             book_name = data.get('book_name')
             category = data.get('category')
@@ -155,15 +159,14 @@ class DeleteBook(MethodView):
     @token_required
     def delete(self, bookid):
         """This method delete book"""
-        if g.user.role == "admin":
-
+        if g.user.IsAdmin == True:
             book = Book.query.filter_by(bookid=bookid).first()
             if book:
                 db.session.delete(book)
                 db.session.commit()
 
                 return make_response(jsonify({
-                    "Message": "delete successful"}), 204)
+                    "Message": "delete successful"}), 200)
             else:
                 return make_response(jsonify({
                     "error": "Book does not exist."}), 404)
@@ -181,7 +184,6 @@ class BorrowBook(MethodView):
         if returned:
             borrows = Borrow.query.filter_by(
                 returned=False, user_email=g.user.email)
-            print(borrows)
             borrowed = []
             for borrow_book in borrows:
                 borrowed.append({
@@ -211,6 +213,10 @@ class BorrowBook(MethodView):
     @token_required
     def post(self, bookid):
         """ This method borrows a single book"""
+        try:
+            bookid = int(bookid)
+        except ValueError:
+            return jsonify({"Message": "Invalid book ID"})
         book = Book.query.filter_by(bookid=bookid).first()
         if book:
             if book.availabilty is True:
@@ -237,6 +243,10 @@ class ReturnBook(MethodView):
     @token_required
     def put(self, bookid):
         """ This method Returns a single book"""
+        try:
+            bookid = int(bookid)
+        except ValueError:
+            return jsonify({"Message": "Invalid book ID"})
         book = Book.query.filter_by(bookid=bookid).first()
         return_book = Borrow.query.filter_by(bookid=book.bookid).first()
 
