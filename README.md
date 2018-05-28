@@ -46,7 +46,10 @@ Alternatively create the database from the command line :
 createdb books
 createdb tests
 ```
-
+Create Super-User(Admin)
+```
+python admin.py  email  password
+```
 
 ## Testing 
 Run application by 
