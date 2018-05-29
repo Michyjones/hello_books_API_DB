@@ -96,10 +96,6 @@ class UserLogin(MethodView):
         email = data.get('email')
         password = data.get('password')
 
-        if not request.get_json():
-            return make_response(jsonify({"Error": "Bad request. Enter "
-                                          "data in JSON format"}), 400)
-
         person = User.query.filter_by(email=email).first()
 
         if person and person.verify_password(password):
@@ -121,15 +117,16 @@ class LogoutUser(MethodView):
     def post(self):
         """Logs out the user and add token to blacklist"""
         header = request.headers['Authorization']
-        blacklist= BlacklistedToken.query.filter_by(token=header).first()
-        if blacklist and blacklist is True:
+        blacklist = BlacklistedToken.query.filter_by(
+            token=header.split()[1]).first()
+        if blacklist and blacklist.valid is True:
             blacklisted = BlacklistedToken(token=header, valid=False)
             blacklist.valid = False
             db.session.add(blacklisted)
             db.session.commit()
             return make_response(jsonify({'success': 'logged out'}), 200)
-        return make_response(jsonify({'message': 'Your session has expired!'}),
-                             401)
+        return make_response(jsonify({'message': "Your session has "
+                                      "expired !!"}), 401)
 
 
 class ChangePassword(MethodView):
@@ -193,7 +190,7 @@ class ResetPassword(MethodView):
         person.save()
         return make_response(jsonify({"Message": "An email has been sent with "
                                       "instructions to your password"}),
-                             201)
+                             200)
 
 
 user.add_url_rule(
