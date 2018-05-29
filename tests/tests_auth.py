@@ -19,7 +19,6 @@ class UserAuthentication(unittest.TestCase):
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
-        # user1 = {"email": "mbuguamike@gmail.com", "password": "qwerty12345"}
         response = self.client.post(
             "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
@@ -146,12 +145,14 @@ class UserAuthentication(unittest.TestCase):
 
     def test_change_password_without_oldpass(self):
         user = {"email": "michyjones5@gmail.com",
-                "password": "qwerty122345", "role": "user"}
+                "password": "qwerty122345"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
+        user2 = {"email": "michyjones5@gmail.com",
+                 "password": "", "new_password": "1234567qwerty"}
         response = self.client.post(
-            "/api/v2/auth/change-password", data=json.dumps(user),
+            "/api/v2/auth/change-password", data=json.dumps(user2),
             content_type="application/json")
         self.assertEqual(response.status_code, 200)
 
