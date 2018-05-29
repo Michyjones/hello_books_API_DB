@@ -27,8 +27,6 @@ def create_app(config_name):
         }
         return jsonify(message), 404
 
-    # return app
-
     @app.errorhandler(405)
     def notallowed(error=None):
         """Method for not allowed endpoints."""

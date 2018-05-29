@@ -67,7 +67,7 @@ class Books(MethodView):
     @token_required
     def post(self):
         """This method add a book"""
-        if g.user.IsAdmin == True:
+        if g.user.IsAdmin is True:
             data = request.get_json()
             bookid = data.get('bookid')
             book_name = data.get('book_name')
@@ -131,7 +131,7 @@ class EditBook(MethodView):
     @token_required
     def put(self, bookid):
         """ This Method edits book"""
-        if g.user.IsAdmin == True:
+        if g.user.IsAdmin is True:
             data = request.get_json()
             book_name = data.get('book_name')
             category = data.get('category')
@@ -159,7 +159,7 @@ class DeleteBook(MethodView):
     @token_required
     def delete(self, bookid):
         """This method delete book"""
-        if g.user.IsAdmin == True:
+        if g.user.IsAdmin is True:
             book = Book.query.filter_by(bookid=bookid).first()
             if book:
                 db.session.delete(book)
