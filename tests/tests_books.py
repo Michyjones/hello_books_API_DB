@@ -1,5 +1,4 @@
 import unittest
-# from admin import *
 import json
 from app import create_app
 from app.models import db, User
@@ -9,12 +8,12 @@ class Userbooks(unittest.TestCase):
     def setUp(self):
         self.app = create_app(config_name="testing")
         self.client = self.app.test_client()
-        # self.app.app_context().push()
         with self.app.app_context():
 
             # db.drop_all()
             db.create_all()
-            admin = User(email="admin@gmail.com", password="qwerty12345", IsAdmin=True)
+            admin = User(email="admin@gmail.com",
+                         password="qwerty12345", IsAdmin=True)
             admin.save()
         user = {"email": "admin@gmail.com", "password": "qwerty12345"}
         self.client.post(
@@ -33,7 +32,6 @@ class Userbooks(unittest.TestCase):
                 "category": "Engineering"}
         response = self.client.post(
             "/api/v2/books", data=json.dumps(book), headers=self.headers)
-        print("qwertyui", response.data)
         self.assertEqual(response.status_code, 201)
 
     def test_update_a_book(self):
@@ -116,7 +114,7 @@ class Userbooks(unittest.TestCase):
         book = {"bookid": "004", "bookname": "Introduction to flask",
                 "category": "software"}
         r = self.client.post("/api/v2/books", data=json.dumps(book),
-                         headers=self.headers)
+                             headers=self.headers)
         print(r.data)
         response = self.client.post(
             "/api/v2/users/books/004", data=json.dumps(book),
