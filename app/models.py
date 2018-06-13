@@ -36,12 +36,8 @@ class User(db.Model):
 class Book(db.Model):
     __tablename__ = 'book'
 
-    def __init__(self, bookid, book_name, category):
-        self.bookid = bookid
-        self.book_name = book_name
-        self.category = category
-
-    bookid = db.Column('bookid', db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    serial_no = db.Column(db.String(20))
     book_name = db.Column('book_name', db.String(100))
     category = db.Column('category', db.String(50))
     availabilty = db.Column(db.Boolean, default=True)
@@ -52,9 +48,9 @@ class Borrow(db.Model):
 
     __tablename__ = 'borrow'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id'))
     user_email = db.Column(db.String, db.ForeignKey('user.email'))
-    bookid = db.Column(db.Integer, db.ForeignKey('book.bookid'))
     date_borrowed = db.Column(
         db.DateTime, default=datetime.now, nullable=False)
     date_returned = db.Column(
