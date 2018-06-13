@@ -19,17 +19,18 @@ class Books(MethodView):
         limit = request.args.get('limit', default=3, type=int)
 
         if page and limit:
-            books = Book.query.order_by(Book.bookid).paginate(page=int(page),
-                                                              per_page=int(
-                                                                  limit),
-                                                              error_out=False)
+            books = Book.query.order_by(Book.id).paginate(page=int(page),
+                                                          per_page=int(
+                limit),
+                error_out=False)
 
             all_books, next_url, prev_url = [], None, None
 
             if books:
                 for book in books.items:
                     all_books.append({
-                        "bookid": book.bookid,
+                        "id": book.id,
+                        "serial_no": book.serial_no,
                         "book_name": book.book_name,
                         "category": book.category,
                         "availabilty": book.availabilty
@@ -69,15 +70,15 @@ class Books(MethodView):
         """This method add a book"""
         if g.user.IsAdmin is True:
             data = request.get_json()
-            bookid = data.get('bookid')
+            serial_no = data.get('serial_no')
             book_name = data.get('book_name')
             category = data.get('category')
 
             current_user = User.query.filter_by(IsAdmin='admin')
             if current_user:
-                if bookid == '':
+                if serial_no == '':
                     return make_response(jsonify(
-                        {"error": "Enter Book id"}), 400)
+                        {"error": "Enter serial Number"}), 400)
 
                 if book_name == '':
                     return make_response(jsonify(
@@ -85,13 +86,13 @@ class Books(MethodView):
                 if category == '':
                     return make_response(jsonify(
                         {"error": "Enter Category"}), 400)
-                book = Book.query.filter_by(bookid=bookid).first()
+                book = Book.query.filter_by(serial_no=serial_no).first()
 
                 if book:
                     return make_response(jsonify(
                         {'message': 'Book  already exist'}), 409)
 
-                book = Book(bookid=bookid, book_name=book_name,
+                book = Book(serial_no=serial_no, book_name=book_name,
                             category=category)
                 db.session.add(book)
                 db.session.commit()
@@ -105,17 +106,18 @@ class Books(MethodView):
 
 class GetBook(MethodView):
     @token_required
-    def get(self, bookid):
+    def get(self, id):
         """ This method gets a single book"""
         try:
-            bookid = int(bookid)
+            id = int(id)
         except ValueError:
             return jsonify({"Message": "Use a valid books Id"})
-        book = Book.query.filter_by(bookid=bookid).first()
+        book = Book.query.filter_by(id=id).first()
         if book:
             one_book = []
             one_book.append({
-                "bookid": book.bookid,
+                "id": book.id,
+                "serial_no": book.serial_no,
                 "book_name": book.book_name,
                 "category": book.category,
                 "availabilty": book.availabilty
@@ -129,17 +131,18 @@ class GetBook(MethodView):
 
 class EditBook(MethodView):
     @token_required
-    def put(self, bookid):
+    def put(self, id):
         """ This Method edits book"""
         if g.user.IsAdmin is True:
             data = request.get_json()
+            serial_no = data.get('serial_no')
             book_name = data.get('book_name')
             category = data.get('category')
 
-            book = Book.query.filter_by(bookid=bookid).first()
+            book = Book.query.filter_by(id=id).first()
 
             if book:
-
+                book.serial_no = serial_no
                 book.book_name = book_name
                 book.category = category
                 book.availabilty = True
@@ -157,10 +160,10 @@ class EditBook(MethodView):
 
 class DeleteBook(MethodView):
     @token_required
-    def delete(self, bookid):
+    def delete(self, id):
         """This method delete book"""
         if g.user.IsAdmin is True:
-            book = Book.query.filter_by(bookid=bookid).first()
+            book = Book.query.filter_by(id=id).first()
             if book:
                 db.session.delete(book)
                 db.session.commit()
@@ -187,9 +190,9 @@ class BorrowBook(MethodView):
             borrowed = []
             for borrow_book in borrows:
                 borrowed.append({
-                    "id": borrow_book.id,
+                    # "id": borrow_book.id,
                     "user_email": borrow_book.user_email,
-                    "bookid": borrow_book.bookid,
+                    "book_id": borrow_book.book_id,
                     "date_borrowed": borrow_book.date_borrowed,
                     "date_returned": borrow_book.date_returned,
                     "returned": borrow_book.returned
@@ -201,9 +204,9 @@ class BorrowBook(MethodView):
         borrowed = []
         for borrow_book in borrows:
             borrowed.append({
-                "id": borrow_book.id,
+                # "id": borrow_book.id,
                 "user_email": borrow_book.user_email,
-                "bookid": borrow_book.bookid,
+                "book_id": borrow_book.book_id,
                 "date_borrowed": borrow_book.date_borrowed,
                 "date_returned": borrow_book.date_returned,
                 "returned": borrow_book.returned
@@ -211,22 +214,22 @@ class BorrowBook(MethodView):
         return make_response(jsonify(borrowed), 200)
 
     @token_required
-    def post(self, bookid):
+    def post(self, id):
         """ This method borrows a single book"""
         try:
-            bookid = int(bookid)
+            id = int(id)
         except ValueError:
             return jsonify({"Message": "Invalid book ID"})
-        book = Book.query.filter_by(bookid=bookid).first()
+        book = Book.query.filter_by(id=id).first()
         if book:
             if book.availabilty is True:
                 borrow_book = Borrow(
-                    user_email=g.user.email, bookid=bookid, returned=False)
+                    user_email=g.user.email, book_id=id, returned=False)
                 book.availabilty = False
                 db.session.add(borrow_book)
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have borrowed "
-                                              "a book with id {}".format(bookid
+                                              "a book with id {}".format(id
                                                                          )}),
                                      200)
 
@@ -241,14 +244,14 @@ class BorrowBook(MethodView):
 
 class ReturnBook(MethodView):
     @token_required
-    def put(self, bookid):
+    def put(self, id):
         """ This method Returns a single book"""
         try:
-            bookid = int(bookid)
+            id = int(id)
         except ValueError:
             return jsonify({"Message": "Invalid book ID"})
-        book = Book.query.filter_by(bookid=bookid).first()
-        return_book = Borrow.query.filter_by(bookid=book.bookid).first()
+        book = Book.query.filter_by(id=id).first()
+        return_book = Borrow.query.filter_by(book_id=id).first()
 
         if book:
             if book.availabilty is False and \
@@ -258,7 +261,7 @@ class ReturnBook(MethodView):
                 db.session.add(return_book)
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have Returned "
-                                              "a book with id {}".format(bookid
+                                              "a book with id {}".format(id
                                                                          )}),
                                      200)
 
@@ -276,15 +279,15 @@ book.add_url_rule(
         'books'), methods=['GET', 'POST'])
 
 book.add_url_rule(
-    '/books/<bookid>', view_func=GetBook.as_view(
+    '/books/<id>', view_func=GetBook.as_view(
         'getbook'), methods=['GET'])
 
 book.add_url_rule(
-    '/books/<bookid>', view_func=EditBook.as_view(
+    '/books/<id>', view_func=EditBook.as_view(
         'editbook'), methods=['PUT'])
 
 book.add_url_rule(
-    '/books/<bookid>', view_func=DeleteBook.as_view(
+    '/books/<id>', view_func=DeleteBook.as_view(
         'deletebook'), methods=['DELETE'])
 
 book.add_url_rule(
@@ -292,9 +295,9 @@ book.add_url_rule(
         'borrowhistory'), methods=['GET'])
 
 book.add_url_rule(
-    '/users/books/<bookid>', view_func=BorrowBook.as_view(
+    '/users/books/<id>', view_func=BorrowBook.as_view(
         'borrowbook'), methods=['POST'])
 
 book.add_url_rule(
-    '/users/books/<bookid>', view_func=ReturnBook.as_view(
+    '/users/books/<id>', view_func=ReturnBook.as_view(
         'returnbook'), methods=['PUT'])
