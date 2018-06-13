@@ -40,7 +40,6 @@ class UserAuthentication(unittest.TestCase):
         response = self.client.post(
             "/api/v2/auth/register", data=user,
             content_type="application/json")
-        print(response.data)
         self.assertEqual(response.status_code, 400)
 
     def test_register_user_role_can_only_be_admin_or_user(self):
@@ -130,6 +129,13 @@ class UserAuthentication(unittest.TestCase):
         response = self.client.post(
             "/api/v2/auth/logout", data=user, headers=self.headers)
         self.assertEqual(response.status_code, 200)
+
+    def test_logout_when_tokenexpired(self):
+        user = {"email": "michyjones@gmail.com", "password": "qwerty122345"}
+        response = self.client.post(
+            "/api/v2/auth/login", data=json.dumps(user),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 401)
 
     def test_change_password(self):
         user = {"email": "michyjones@gmail.com",
