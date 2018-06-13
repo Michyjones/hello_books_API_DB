@@ -21,6 +21,10 @@ def token_required(f):
         token = request.headers.get("Authorization")
         if not token:
             return jsonify({"Message": "Token is Missing!!!"})
+        blacklist_token = BlacklistedToken.query.filter_by(
+            token=token.split()[1], valid=False).first()
+        if blacklist_token:
+            return jsonify({"Message": "You are already logged out!!!"})
         try:
             data = jwt.decode(token[7:], SECRET_KEY)
             current_user = User.query.filter_by(email=data['email']).first()
@@ -117,11 +121,11 @@ class LogoutUser(MethodView):
     def post(self):
         """Logs out the user and add token to blacklist"""
         header = request.headers['Authorization']
-        blacklist = BlacklistedToken.query.filter_by(
+        blacklists = BlacklistedToken.query.filter_by(
             token=header.split()[1]).first()
-        if blacklist and blacklist.valid is True:
-            blacklisted = BlacklistedToken(token=header, valid=False)
-            blacklist.valid = False
+        if blacklists and blacklists.valid is True:
+            blacklisted = BlacklistedToken(
+                token=header.split()[1], valid=False)
             db.session.add(blacklisted)
             db.session.commit()
             return make_response(jsonify({'success': 'logged out'}), 200)
