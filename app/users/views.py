@@ -194,9 +194,8 @@ class ResetPassword(MethodView):
             password, method='sha256')
 
         person.save()
-        return make_response(jsonify({"Message": "An email has been sent with "
-                                      "instructions to your password"}),
-                             200)
+        return make_response(jsonify({"Message": "A link has been sent to your"
+                                      " email with the instructions"}), 200)
 
 
 user.add_url_rule(
