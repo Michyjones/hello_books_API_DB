@@ -195,7 +195,7 @@ class UserAuthentication(unittest.TestCase):
         user = {"email": None}
         response = self.client.post(
             "/api/v2/auth/reset-password", data=json.dumps(user),
-            headers=self.headers)
+            content_type="application/json")
         self.assertEqual(response.status_code, 400)
         output = json.loads(response.data)
         self.assertEqual(output['Error'],
@@ -205,7 +205,7 @@ class UserAuthentication(unittest.TestCase):
         user = {"email": "worldcupishere@gmail.com"}
         response = self.client.post(
             "/api/v2/auth/reset-password", data=json.dumps(user),
-            headers=self.headers)
+            content_type="application/json")
         self.assertEqual(response.status_code, 400)
         output = json.loads(response.data)
         self.assertEqual(output['Error'],
@@ -215,7 +215,7 @@ class UserAuthentication(unittest.TestCase):
         user = {"email": "mbuguamike@gmail.com"}
         response = self.client.post(
             "/api/v2/auth/reset-password", data=json.dumps(user),
-            headers=self.headers)
+            content_type="application/json")
         self.assertEqual(response.status_code, 200)
         output = json.loads(response.data)
         self.assertEqual(output['Message'],
