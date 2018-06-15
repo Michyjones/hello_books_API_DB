@@ -11,11 +11,9 @@ class UserAuthentication(unittest.TestCase):
         self.client = self.app.test_client()
         with self.app.app_context():
 
-            db.drop_all()
             db.create_all()
 
-        user = {"email": "mbuguamike@gmail.com", "password": "qwerty12345",
-                "role": "admin"}
+        user = {"email": "mbuguamike@gmail.com", "password": "qwerty12345"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
@@ -23,54 +21,36 @@ class UserAuthentication(unittest.TestCase):
             "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
         self.token = json.loads(response.data.decode())['token']
-        self.headers = {'Content-Type': 'application/json',
-                        'token': self.token}
+        self.headers = {'Content-Type': 'application/json', 'Authorization':
+                        'Bearer {}'.format(self.token)
+                        }
 
-    def test_register_user_email_isnot_null(self):
-        user = {"email": None, "password": "password",
-                "role": "user"}
+    def test_register_with_null_email(self):
+        user = {"email": None, "password": "password"}
         response = self.client.post(
             "/api/v2/auth/register", data=user,
             content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
-    def test_register_user_password_isnot_null(self):
-        user = {"email": "michyjones@gmail.com", "password": None,
-                "role": "user"}
-        response = self.client.post(
-            "/api/v2/auth/register", data=user,
-            content_type="application/json")
-        self.assertEqual(response.status_code, 400)
-
-    def test_register_user_role_can_only_be_admin_or_user(self):
-        user = {"email": "admin@gmail.com", "password": "qwerty123",
-                "role": "manager"}
-        response = self.client.post(
-            "/api/v2/auth/register", data=user,
-            content_type="application/json")
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_register_password_more_than_8_character(self):
-        user = {"email": "michyjones@gmail.com", "password": "rwyeue",
-                "role": "user"}
-        response = self.client.post(
-            "/api/v2/auth/register", data=user,
-            content_type="application/json")
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_register_user_exist(self):
-        user = {"email": "michyjones@gmail.com", "password": "qwerty12345",
-                "role": "user"}
-        self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
+    def test_register_with_null_password(self):
+        user = {"email": "michyjones@gmail.com", "password": None}
         response = self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Please enter your password")
 
-        self.assertEqual(response.status_code, 200)
+    def test_register_password_is_less_than_8_character(self):
+        user = {"email": "michyjones@gmail.com", "password": "rwyeue"}
+        response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "Password should be more than 8 character")
 
     def test_register_user(self):
         user = {"email": "michyjone@gmail.com", "password": "qwerty12345",
@@ -81,6 +61,23 @@ class UserAuthentication(unittest.TestCase):
             content_type="application/json")
 
         self.assertEqual(response.status_code, 201)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "User created successfully")
+
+    def test_register_user_exists(self):
+        user = {"email": "michyjones@gmail.com", "password": "qwerty12345"}
+        self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+
+        self.assertEqual(response.status_code, 409)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "User already exist")
 
     def test_login_user(self):
 
@@ -95,10 +92,13 @@ class UserAuthentication(unittest.TestCase):
             content_type="application/json")
 
         self.assertEqual(response.status_code, 200)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "User login successfully")
 
-    def test_login_user_invalid_credentials(self):
+    def test_login_with_invalid_credentials(self):
         user = {"email": "nevermind@gmail.com",
-                "password": "qwerty122345", "role": "user"}
+                "password": "qwerty122345"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
@@ -107,16 +107,18 @@ class UserAuthentication(unittest.TestCase):
             "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
         self.assertEqual(response.status_code, 401)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Invalid credentials")
 
-    def test_login_user_email_is_not_null(self):
-        user = {"email": None, "password": "password",
-                "role": "user"}
+    def test_login_with_null_email(self):
+        user = {"email": None, "password": "password1234"}
         response = self.client.post(
-            "/api/v2/auth/login", data=user,
+            "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 401)
 
-    def test_login_user_password_is_not_null(self):
+    def test_login_with_null_password(self):
         user = {"email": "michyjones@gmail.com", "password": None,
                 "role": "user"}
         response = self.client.post(
@@ -129,38 +131,54 @@ class UserAuthentication(unittest.TestCase):
         response = self.client.post(
             "/api/v2/auth/logout", data=user, headers=self.headers)
         self.assertEqual(response.status_code, 200)
+        output = json.loads(response.data)
+        self.assertEqual(output['Msg'],
+                         "You are logged out")
 
     def test_logout_when_tokenexpired(self):
         user = {"email": "michyjones@gmail.com", "password": "qwerty122345"}
+        self.client.post(
+            "/api/v2/auth/logout", data=json.dumps(user), headers=self.headers)
         response = self.client.post(
-            "/api/v2/auth/login", data=json.dumps(user),
-            content_type="application/json")
-        self.assertEqual(response.status_code, 401)
+            "/api/v2/auth/logout", data=json.dumps(user),
+            content_type="application/json", headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "You are already logged out!!!")
 
     def test_change_password(self):
-        user = {"email": "michyjones@gmail.com",
-                "password": "qwerty122345", "role": "user"}
-        self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
-        user = {"email": "michyjones@gmail.com", "password": "newpass12345"}
+        user = {"email": "mbuguamike@gmail.com",
+                "password": "qwerty12345", "new_password": "password12345"}
         response = self.client.post(
             "/api/v2/auth/change-password", data=json.dumps(user),
-            content_type="application/json")
+            headers=self.headers)
         self.assertEqual(response.status_code, 200)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "Password Changed successfully")
 
     def test_change_password_without_oldpass(self):
-        user = {"email": "michyjones5@gmail.com",
-                "password": "qwerty122345"}
-        self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
-        user2 = {"email": "michyjones5@gmail.com",
+        user1 = {"email": "mbuguamike@gmail.com",
                  "password": "", "new_password": "1234567qwerty"}
         response = self.client.post(
-            "/api/v2/auth/change-password", data=json.dumps(user2),
-            content_type="application/json")
-        self.assertEqual(response.status_code, 200)
+            "/api/v2/auth/change-password", data=json.dumps(user1),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Please enter your Current password")
+
+    def test_change_password_with_incorrect_oldpass(self):
+        user1 = {"email": "mbuguamike@gmail.com",
+                 "password": "asdfghrty", "new_password": "1234567qwerty"}
+        response = self.client.post(
+            "/api/v2/auth/change-password", data=json.dumps(user1),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['error'],
+                         "Old password mismatch")
 
     def tearDown(self):
         with self.app.app_context():
