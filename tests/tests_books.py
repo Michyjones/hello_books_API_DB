@@ -107,7 +107,7 @@ class Userbooks(unittest.TestCase):
     def test_update_book_as_normal_user(self):
         book = {'serialno': "002", "book_name": "Introductionto flask",
                 "category": "Engineering"}
-        response = self.client.post(
+        self.client.post(
             "/api/v2/books", data=json.dumps(book), headers=self.headers)
         book = {"book_name": "flask", "category": "software"}
         response = self.client.put(
@@ -120,9 +120,6 @@ class Userbooks(unittest.TestCase):
     def test_update_non_existing_book(self):
         book = {"serialno": "002", "book_name": "Introductionto flask",
                 "category": "Engineering"}
-        self.client.post(
-            "/api/v2/books", data=json.dumps(book), headers=self.headers)
-
         response = self.client.put(
             "/api/v2/books/5", data=json.dumps(book), headers=self.headers)
         self.assertEqual(response.status_code, 404)
@@ -159,8 +156,6 @@ class Userbooks(unittest.TestCase):
         book = {"serialno": "002", "book_name":
                 "Introduction to programming",
                 "category": "Engineering"}
-        self.client.post("/api/v2/books", data=json.dumps(book),
-                         headers=self.headers)
         response = self.client.delete(
             "/api/v2/books/4", data=json.dumps(book), headers=self.headers)
         self.assertEqual(response.status_code, 404)

@@ -180,6 +180,48 @@ class UserAuthentication(unittest.TestCase):
         self.assertEqual(output['error'],
                          "Old password mismatch")
 
+    def test_change_password_with_less_than_8_characters(self):
+        user1 = {"email": "mbuguamike@gmail.com",
+                 "password": "qwerty12345", "new_password": "123"}
+        response = self.client.post(
+            "/api/v2/auth/change-password", data=json.dumps(user1),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Password must be more than 8characters")
+
+    def test_reset_password_without_email(self):
+        user = {"email": None}
+        response = self.client.post(
+            "/api/v2/auth/reset-password", data=json.dumps(user),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Please enter your email address")
+
+    def test_reset_password_with_non_email(self):
+        user = {"email": "worldcupishere@gmail.com"}
+        response = self.client.post(
+            "/api/v2/auth/reset-password", data=json.dumps(user),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Email not found!")
+
+    def test_reset_password(self):
+        user = {"email": "mbuguamike@gmail.com"}
+        response = self.client.post(
+            "/api/v2/auth/reset-password", data=json.dumps(user),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "A link has been sent to your email with "
+                         "the instructions")
+
     def tearDown(self):
         with self.app.app_context():
             db.drop_all()
