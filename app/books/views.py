@@ -111,7 +111,7 @@ class GetBook(MethodView):
         try:
             id = int(id)
         except ValueError:
-            return jsonify({"Message": "Use a valid books Id"})
+            return jsonify({"Message": "Use a valid book Id"}), 404
         book = Book.query.filter_by(id=id).first()
         if book:
             one_book = []
@@ -126,7 +126,7 @@ class GetBook(MethodView):
 
         else:
             return make_response(jsonify({
-                "Error": "No book with that id"}), 400)
+                "Error": "No book with that id"}), 404)
 
 
 class EditBook(MethodView):
@@ -152,7 +152,7 @@ class EditBook(MethodView):
                     {"message": "Edit successfully"
                      }), 201)
             else:
-                return make_response(jsonify("No book with that id"), 404)
+                return make_response(jsonify({"Error":"No book with that id"}), 404)
         else:
             return make_response(jsonify({"Message":
                                           "You are not Authorized !!!"}), 401)
@@ -219,7 +219,7 @@ class BorrowBook(MethodView):
         try:
             id = int(id)
         except ValueError:
-            return jsonify({"Message": "Invalid book ID"})
+            return jsonify({"Message": "Invalid book ID"}), 404
         book = Book.query.filter_by(id=id).first()
         if book:
             if book.availabilty is True:
