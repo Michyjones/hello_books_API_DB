@@ -13,7 +13,7 @@ class UserAuthentication(unittest.TestCase):
 
             db.create_all()
 
-        user = {"email": "mbuguamike@gmail.com", "password": "qwerty12345"}
+        user = {"email": "mike.gitau92@gmail.com", "password": "qwerty12345"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
@@ -212,7 +212,7 @@ class UserAuthentication(unittest.TestCase):
                          "Email not found!")
 
     def test_reset_password(self):
-        user = {"email": "mbuguamike@gmail.com"}
+        user = {"email": "mike.gitau92@gmail.com"}
         response = self.client.post(
             "/api/v2/auth/reset-password", data=json.dumps(user),
             content_type="application/json")
