@@ -24,7 +24,8 @@ def token_required(f):
         blacklist_token = BlacklistedToken.query.filter_by(
             token=token.split()[1], valid=False).first()
         if blacklist_token:
-            return jsonify({"Message": "You are already logged out!!!"})
+            return make_response(jsonify({"Message": "You are already"
+                                          " logged out!!!"}), 400)
         try:
             data = jwt.decode(token[7:], SECRET_KEY)
             current_user = User.query.filter_by(email=data['email']).first()
@@ -70,26 +71,27 @@ class UserRegister(MethodView):
 
         if valid_email is None:
             return make_response(jsonify(
-                {'error': 'Please enter valid Email!'}), 400)
+                {'Error': 'Please enter valid Email!'}), 400)
 
         if password is None:
-            return make_response(jsonify({'error': 'Enter password'}), 400)
+            return make_response(jsonify({'Error': 'Please enter your'
+                                          ' password'}), 400)
 
         if len(password.strip()) < 8:
 
             return make_response(jsonify(
-                {'message': 'password should be more than 8 character'}), 400)
+                {'Message': 'Password should be more than 8 character'}), 400)
 
         person = User.query.filter_by(email=email).first()
 
         if person:
             return make_response(jsonify({
-                "error": "User already exist"
-            }))
+                "Error": "User already exist"
+            }), 409)
         new_user = User(email=email.strip(), password=password)
         new_user.save()
         return make_response(jsonify({
-            "message": "user_created successfully"
+            "Message": "User created successfully"
         }), 201)
 
 
@@ -109,10 +111,10 @@ class UserLogin(MethodView):
                                SECRET_KEY)
             BlacklistedToken(token.decode('UTF-8')).save()
             return make_response(jsonify({"token": token.decode('UTF-8'),
-                                          "message":
+                                          "Message":
                                           "User login successfully"}), 200)
         else:
-            return make_response(jsonify({"error":
+            return make_response(jsonify({"Error":
                                           "Invalid credentials"}), 401)
 
 
@@ -128,9 +130,9 @@ class LogoutUser(MethodView):
                 token=header.split()[1], valid=False)
             db.session.add(blacklisted)
             db.session.commit()
-            return make_response(jsonify({'success': 'logged out'}), 200)
+            return make_response(jsonify({'Msg': 'You are logged out'}), 200)
         return make_response(jsonify({'message': "Your session has "
-                                      "expired !!"}), 401)
+                                      "expired !!"}), 400)
 
 
 class ChangePassword(MethodView):
