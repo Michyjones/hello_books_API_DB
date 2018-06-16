@@ -152,7 +152,8 @@ class EditBook(MethodView):
                     {"message": "Edit successfully"
                      }), 201)
             else:
-                return make_response(jsonify({"Error": "No book with that id"}), 404)
+                return make_response(jsonify({"Error": "No book with "
+                                              "that id"}), 404)
         else:
             return make_response(jsonify({"Message":
                                           "You are not Authorized !!!"}), 401)
