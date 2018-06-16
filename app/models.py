@@ -6,11 +6,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class User(db.Model):
     __tablename__ = 'user'
 
-    def __init__(self, email, password, IsAdmin=False):
+    def __init__(self, first_name, last_name, address, email, password, IsAdmin=False):
+        self.first_name =first_name
+        self.last_name = last_name
+        self.address = address
         self.email = email
         self.password = generate_password_hash(password, method='sha256')
         self.IsAdmin = IsAdmin
 
+    first_name = db.Column(db.String(30))
+    last_name = db.Column(db.String(30))
+    address = db.Column(db.String(30))
     email = db.Column(db.String(50), primary_key=True)
     password = db.Column(db.String(128))
     IsAdmin = db.Column(db.Boolean, default=False)
