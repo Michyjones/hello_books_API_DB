@@ -11,8 +11,12 @@ class Userbooks(unittest.TestCase):
         with self.app.app_context():
 
             db.create_all()
-            admin = User(email="admin@gmail.com",
-                         password="qwerty12345", IsAdmin=True)
+            admin = User(first_name="jones",
+                         last_name="michy",
+                         address="123nai",
+                         email="admin@gmail.com",
+                         password="qwerty12345",
+                         IsAdmin=True)
             admin.save()
         # Login admin
         user = {"email": "admin@gmail.com", "password": "qwerty12345"}
@@ -26,12 +30,13 @@ class Userbooks(unittest.TestCase):
                         }
 
         # Login a normal user
-        normal_user = {"email": "a@gmail.com", "password": "password12345"}
+        normal_user = {"first_name":"jones", "last_name":"michy", "address": "123 Nairobi", "email": "mike.gitau92@gmail.com", "password": "qwerty12345", "confirm_password": "qwerty12345"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(normal_user),
             content_type="application/json")
+        n_user = { "email": "mike.gitau92@gmail.com", "password": "qwerty12345"}
         response = self.client.post(
-            "/api/v2/auth/login", data=json.dumps(normal_user),
+            "/api/v2/auth/login", data=json.dumps(n_user),
             content_type="application/json")
         self.token_1 = json.loads(response.data.decode())['token']
         self.headers_1 = {'Content-Type': 'application/json', 'Authorization':

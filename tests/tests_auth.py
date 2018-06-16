@@ -13,12 +13,14 @@ class UserAuthentication(unittest.TestCase):
 
             db.create_all()
 
-        user = {"email": "mike.gitau92@gmail.com", "password": "qwerty12345"}
-        self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
+        self.user = {"first_name": "jones", "last_name": "michy",
+                     "address": "123 Nairobi", "email": "mike.gitau92@gmail.com",
+                     "password": "qwerty12345", "confirm_password": "qwerty12345"}
+        self.response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(self.user),
             content_type="application/json")
         response = self.client.post(
-            "/api/v2/auth/login", data=json.dumps(user),
+            "/api/v2/auth/login", data=json.dumps(self.user),
             content_type="application/json")
         self.token = json.loads(response.data.decode())['token']
         self.headers = {'Content-Type': 'application/json', 'Authorization':
@@ -26,24 +28,18 @@ class UserAuthentication(unittest.TestCase):
                         }
 
     def test_register_with_null_email(self):
-        user = {"email": None, "password": "password"}
+        user = {"first_name": "jones", "last_name": "michy",
+                "address": "123 Nairobi", "email": None,
+                "password": "qwerty12345", "confirm_password": "qwerty12345"}
         response = self.client.post(
             "/api/v2/auth/register", data=user,
             content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
-    def test_register_with_null_password(self):
-        user = {"email": "michyjones@gmail.com", "password": None}
-        response = self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
-        self.assertEqual(response.status_code, 400)
-        output = json.loads(response.data)
-        self.assertEqual(output['Error'],
-                         "Please enter your password")
-
     def test_register_password_is_less_than_8_character(self):
-        user = {"email": "michyjones@gmail.com", "password": "rwyeue"}
+        user = {"first_name": "jones", "last_name": "michy",
+                 "address": "123 Nairobi", "email": "mike.gitau92@gmail.com",
+                 "password": "qwerty1", "confirm_password": "qwerty12345"}
         response = self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
@@ -53,25 +49,14 @@ class UserAuthentication(unittest.TestCase):
                          "Password should be more than 8 character")
 
     def test_register_user(self):
-        user = {"email": "michyjone@gmail.com", "password": "qwerty12345",
-                "role": "user"}
-
-        response = self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
-
-        self.assertEqual(response.status_code, 201)
-        output = json.loads(response.data)
+        self.assertEqual(self.response.status_code, 201)
+        output = json.loads(self.response.data)
         self.assertEqual(output['Message'],
                          "User created successfully")
 
     def test_register_user_exists(self):
-        user = {"email": "michyjones@gmail.com", "password": "qwerty12345"}
-        self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
         response = self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
+            "/api/v2/auth/register", data=json.dumps(self.user),
             content_type="application/json")
 
         self.assertEqual(response.status_code, 409)
@@ -80,13 +65,7 @@ class UserAuthentication(unittest.TestCase):
                          "User already exist")
 
     def test_login_user(self):
-
-        user = {"email": "peterjohn@gmail.com",
-                "password": "qwerty12345", "role": "user"}
-        self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
-            content_type="application/json")
-        user = {"email": "peterjohn@gmail.com", "password": "qwerty12345"}
+        user = {"email": "mike.gitau92@gmail.com", "password": "qwerty12345"}
         response = self.client.post(
             "/api/v2/auth/login", data=json.dumps(user),
             content_type="application/json")
@@ -97,10 +76,8 @@ class UserAuthentication(unittest.TestCase):
                          "User login successfully")
 
     def test_login_with_invalid_credentials(self):
-        user = {"email": "nevermind@gmail.com",
-                "password": "qwerty122345"}
         self.client.post(
-            "/api/v2/auth/register", data=json.dumps(user),
+            "/api/v2/auth/register", data=json.dumps(self.user),
             content_type="application/json")
         user = {"email": "admin@gmail.com", "password": "asdfghsg"}
         response = self.client.post(
