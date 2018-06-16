@@ -63,18 +63,32 @@ class UserRegister(MethodView):
     def post(self):
         """ This method create a new user"""
         data = request.get_json()
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
+        address = data.get('address')
         email = data.get('email')
         password = data.get('password')
+        confirm_password = data.get('confirm_password')
         valid_email = re.match(
             "(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
             email.strip())
+        if first_name.strip() == "":
+            return make_response(jsonify(
+                {"Message": "Please enter your first name"}), 400)
+
+        if last_name.strip() == "":
+            return make_response(jsonify(
+                {"Message": "Please enter your last name"}), 400)
+        if address.strip() == "":
+            return make_response(jsonify(
+                {"Message": "Please enter your address"}), 400)
 
         if valid_email is None:
             return make_response(jsonify(
                 {'Error': 'Please enter valid Email!'}), 400)
 
-        if password is None:
-            return make_response(jsonify({'Error': 'Please enter your'
+        if confirm_password.strip() == "":
+            return make_response(jsonify({'Error': 'Please confirm your'
                                           ' password'}), 400)
 
         if len(password.strip()) < 8:
@@ -88,11 +102,17 @@ class UserRegister(MethodView):
             return make_response(jsonify({
                 "Error": "User already exist"
             }), 409)
-        new_user = User(email=email.strip(), password=password)
-        new_user.save()
-        return make_response(jsonify({
-            "Message": "User created successfully"
-        }), 201)
+        if password == confirm_password:
+            new_user = User(first_name=first_name, last_name=last_name,
+                            address=address, email=email.strip(),
+                            password=password)
+            new_user.save()
+            return make_response(jsonify({
+                "Message": "User created successfully"
+            }), 201)
+        else:
+            return make_response(jsonify({"Error":
+                                          "Password mismatch!!!"}), 401)
 
 
 class UserLogin(MethodView):
