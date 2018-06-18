@@ -38,8 +38,8 @@ class UserAuthentication(unittest.TestCase):
 
     def test_register_password_is_less_than_8_character(self):
         user = {"first_name": "jones", "last_name": "michy",
-                 "address": "123 Nairobi", "email": "mike.gitau92@gmail.com",
-                 "password": "qwerty1", "confirm_password": "qwerty12345"}
+                "address": "123 Nairobi", "email": "mike.gitau92@gmail.com",
+                "password": "qwerty1", "confirm_password": "qwerty12345"}
         response = self.client.post(
             "/api/v2/auth/register", data=json.dumps(user),
             content_type="application/json")
@@ -47,6 +47,54 @@ class UserAuthentication(unittest.TestCase):
         output = json.loads(response.data)
         self.assertEqual(output['Message'],
                          "Password should be more than 8 character")
+
+    def test_register_with_null_first_name(self):
+        user = {"first_name": "", "last_name": "michy",
+                "address": "123 Nai", "email": "mike.gitau92@gmail.com",
+                "password": "qwerty1", "confirm_password": "qwerty12345"}
+        response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "Please enter your first name")
+
+    def test_register_with_null_last_name(self):
+        user = {"first_name": "jones", "last_name": "",
+                "address": "123 Nai", "email": "mike.gitau92@gmail.com",
+                "password": "qwerty1", "confirm_password": "qwerty12345"}
+        response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "Please enter your last name")
+
+    def test_register_with_null_address(self):
+        user = {"first_name": "jones", "last_name": "michy",
+                "address": "", "email": "mike.gitau92@gmail.com",
+                "password": "qwerty1", "confirm_password": "qwerty12345"}
+        response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "Please enter your address")
+
+    def test_register_with_null_confirm_password(self):
+        user = {"first_name": "jones", "last_name": "michy",
+                "address": "123 Nai", "email": "mike.gitau92@gmail.com",
+                "password": "qwerty1", "confirm_password": ""}
+        response = self.client.post(
+            "/api/v2/auth/register", data=json.dumps(user),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        output = json.loads(response.data)
+        self.assertEqual(output['Error'],
+                         "Please confirm your password")
 
     def test_register_user(self):
         self.assertEqual(self.response.status_code, 201)

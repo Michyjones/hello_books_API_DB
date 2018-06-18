@@ -30,11 +30,14 @@ class Userbooks(unittest.TestCase):
                         }
 
         # Login a normal user
-        normal_user = {"first_name":"jones", "last_name":"michy", "address": "123 Nairobi", "email": "mike.gitau92@gmail.com", "password": "qwerty12345", "confirm_password": "qwerty12345"}
+        normal_user = {"first_name": "jones", "last_name": "michy",
+                       "address": "123 Nairobi", "email": "mike.gitau92@gmail.com",
+                       "password": "qwerty12345", "confirm_password": "qwerty12345"}
         self.client.post(
             "/api/v2/auth/register", data=json.dumps(normal_user),
             content_type="application/json")
-        n_user = { "email": "mike.gitau92@gmail.com", "password": "qwerty12345"}
+        n_user = {"email": "mike.gitau92@gmail.com",
+                  "password": "qwerty12345"}
         response = self.client.post(
             "/api/v2/auth/login", data=json.dumps(n_user),
             content_type="application/json")
@@ -42,6 +45,44 @@ class Userbooks(unittest.TestCase):
         self.headers_1 = {'Content-Type': 'application/json', 'Authorization':
                           'Bearer {}'.format(self.token_1)
                           }
+
+    def test_upgrade_user(self):
+        user = {"email": "mike.gitau92@gmail.com"}
+        response = self.client.put(
+            "/api/v2/auth/register", data=json.dumps(user),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "User upgraded to admin")
+        response = self.client.put(
+            "/api/v2/auth/register", data=json.dumps(user),
+            headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "admin downgraded to user")
+
+    def test_upgrade_and_downgrade_user_as_normal_user(self):
+        user = {"email": "mike.gitau92@gmail.com"}
+        response = self.client.put(
+            "/api/v2/auth/register", data=json.dumps(user),
+            headers=self.headers_1)
+        self.assertEqual(response.status_code, 401)
+        output = json.loads(response.data)
+        self.assertEqual(output['Message'],
+                         "You are not Authorized !!!")
+
+    # def test_downgrade_admin(self):
+    #     user = {"email": "mike.gitau92@gmail.com"}
+    #     response = self.client.put(
+    #         "/api/v2/auth/register", data=json.dumps(user),
+    #         headers=self.headers)
+    #     self.assertEqual(response.status_code, 200)
+    #     print(response.data)
+    #     output = json.loads(response.data)
+    #     self.assertEqual(output['Message'],
+    #                      "admin downgraded to user")
 
     def test_create_book(self):
         book = {'serialno': "002", "book_name": "Introductionto flask",
