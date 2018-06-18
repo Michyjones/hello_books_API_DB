@@ -1,0 +1,204 @@
+FORMAT: 1A
+HOST: https://hellobookapidb.herokuapp.com/api/v2
+
+# hellobooksDB
+
+Hello_Books API is an application that helps manage a library and its processes
+like stocking,  tracking and renting books. With this application users are able
+to find and rent books. The  application also has an admin section where the admin 
+can do things like add books, delete  books and modify book information.
+
+### Register User [/auth/register]
+Endpoint for creating a new user given the email, password and role.
+
+#### register  [POST]
+
++ Request (application/json)
+
+        {
+            "email": "jones@gmail.com", "password":"qwerty1234"
+        }
+    
++ Response 201 (appliaction/json)
+
+        {
+            "message": "user_created successfully"
+        }
+
+#### upgrade user [PUT]
+
++ Request (application/json)
+
+        {
+            "email": "jones@gmail.com"
+        }
+    
++ Response 201 (appliaction/json)
+
+        {
+            "message": "User upgraded to admin"
+        }
+
+### Login User [/auth/login]
+User logs in by providing the email and password.
+
+#### login [POST]
+
++ Request (application/json)
+
+
+        {
+           "email": "jones@gmail.com", "password":"qwerty1234"
+        }
+    
++ Response 200 
+
+        {
+            "message": "user_login successfully"
+        }
+        
+### all books [/books]
+#### get books [GET]
+Send a request to get/view all the books available in the catalogue.
+
++ Response 200 
+
+        [
+         {
+            
+            "book_name": "Introduction to html",
+            "book_category": "engineering"
+        } {
+            
+            "book_name": "Introduction to java",
+            "book_category": "engineering"
+        }
+        ]
+
+
+#### create book [POST]
+An admin adds book to the catalogue
+
++ Request (application/json)
+
+        {
+            
+            "book_name": "Introduction to html",
+            "book_category": "engineering"
+        } 
+        
+        
++ Response 201 
+
+        {
+            "message": "book created successfully"
+        }
+
+### one book [/books/1]
+#### get one book [GET]
+A user can view a single bookusing the book id
+
++ Response 200 (application/json)
+
+        {
+            
+            "book_name": "Introduction to html",
+            "book_category": "engineering"
+        }
+
+#### delete a book [DELETE]
+An admin can delete a a user by the id
+
++ Response 204
+
+#### edit a book [PUT]
+
++ Request (application/json)
+        
+        {
+            "book_name": "Introduction to html",
+            "book_category": "engineering"
+        } 
+        
++ Response 201 (application/json)
+
+        {
+            "message": "edit was successfful"
+        }
+        
+        
+### Borrow/Return [/users/books/1]
+Users can borrow and return books in the library
+#### Borrow [POST]
+Users can borrow books from the library
+
++ Request (application/json)
+
+        {
+           
+            "book_name": "Introduction to html",
+            "book_category": "engineering"
+        }
+
++ Response 200
+
+        {
+            "message": "You have borrowed a book with id {}"
+                                       .format(bookid)
+        }
+
+
+#### Return [PUT]
+Users can return books to the library
+
++ Request (application/json)
+
++ Response 200
+
+        {
+            "message": "You have returned a book with id {}"
+                                       .format(bookid)
+        }
+### Logout [/auth/logout]
+A user is able to logout and clears the session
+
+#### logout [POST]
+
++ Response 200 (application/json)
+
+        {
+            "message": "you logged out"
+        }
+### change password [/auth/change-password]
+
+#### change password [POST]
+A user can change their password
+
++ Request (application/json)
+
+         {
+           "email": "jones@gmail.com", "password":"qwerty1234", "new_password":"qwerty12345"
+        }
+    
+    
++ Response 200 (application/json)
+
+        {
+            "message": "password changed successful"
+        }
+### Reset password [/auth/reset-password]        
+#### Reset password [POST]
+A user can reset their password
+
++ Request (application/json)
+
+        {
+           "email": "jones@gmail.com"
+        }
+    
+    
++ Response 200 (application/json)
+
+        {
+            "message": "Instructions has been sent to your email for resetting password"
+        }
