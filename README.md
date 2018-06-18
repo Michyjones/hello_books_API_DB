@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/Michyjones/hello_books_API_DB.svg?branch=develop)](https://travis-ci.org/Michyjones/hello_books_API_DB)
+[![Coverage Status](https://coveralls.io/repos/github/Michyjones/hello_books_API_DB/badge.svg)](https://coveralls.io/github/Michyjones/hello_books_API_DB)
 
 # Hello_books_API_DB
 
