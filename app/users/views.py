@@ -114,6 +114,36 @@ class UserRegister(MethodView):
             return make_response(jsonify({"Error":
                                           "Password mismatch!!!"}), 401)
 
+    @token_required
+    def put(self):
+        """ This method upgrade and downgrade a user """
+        if g.user.IsAdmin is True:
+            data = request.get_json()
+            email = data.get('email')
+
+            person = User.query.filter_by(email=email).first()
+            if person:
+                # upgrade user to admin
+                if person.IsAdmin is False:
+                    person.IsAdmin = True
+                    person.save()
+                    return make_response(jsonify({"Message":
+                                                  "User upgraded to admin"}), 200)
+
+                # downgrade admin to user
+                if person.IsAdmin is True:
+                    person.IsAdmin = False
+                    person.save()
+                    return make_response(jsonify({"Message":
+                                                  "admin downgraded to user"}), 200)
+            else:
+                return make_response(jsonify({"Error":
+                                              "User not found!!"}), 404)
+
+        else:
+            return make_response(jsonify({"Message":
+                                          "You are not Authorized !!!"}), 401)
+
 
 class UserLogin(MethodView):
     def post(self):
@@ -220,7 +250,7 @@ class ResetPassword(MethodView):
 
 user.add_url_rule(
     '/register', view_func=UserRegister.as_view(
-        'register'), methods=['POST'])
+        'register'), methods=['POST', 'PUT'])
 
 user.add_url_rule(
     '/login', view_func=UserLogin.as_view(
