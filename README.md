@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Michyjones/hello_books_API_DB.svg?branch=develop)](https://travis-ci.org/Michyjones/hello_books_API_DB)
+
 # Hello_books_API_DB
 
 Hello_Books API is an application that helps manage a library and its processes like stocking, 
