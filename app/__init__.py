@@ -39,7 +39,8 @@ def create_app(config_name):
     def Badrequest(error=None):
         """Method for not allowed endpoints."""
         message = {
-            "Error": "Bad request. Enter data in JSON format"}
+            "Error": "Please make sure you have entered "
+            "correct information to proceed"}
         return jsonify(message), 400
 
     @app.errorhandler(500)
