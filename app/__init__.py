@@ -1,13 +1,14 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from config import app_config
-
+from flask_cors import CORS
 
 db = SQLAlchemy()
 
 
 def create_app(config_name):
     app = Flask(__name__, instance_relative_config=True)
+    CORS(app)
     app.config.from_object(app_config[config_name])
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
@@ -37,7 +38,7 @@ def create_app(config_name):
 
     @app.errorhandler(400)
     def Badrequest(error=None):
-        """Method for not allowed endpoints."""
+        """Method for bad requests."""
         message = {
             "Error": "Please make sure you have entered "
             "correct information to proceed"}
@@ -45,9 +46,10 @@ def create_app(config_name):
 
     @app.errorhandler(500)
     def Internalservererror(error=None):
-        """Method for not allowed endpoints."""
+        """Method for internal server error."""
         message = {
-            "Error": "Enter Valid information as requested!!"}
+            "Error": "Please make sure you have entered "
+            "correct information to proceed or try later"}
         return jsonify(message), 500
 
     return app

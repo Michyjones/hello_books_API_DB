@@ -6,6 +6,15 @@ class BaseConfig(object):
     TESTING = False
 
 
+    SECURITY_PASSWORD_SALT = 'poiuytrewq987654321'
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 465
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = os.environ.get('Username')
+    MAIL_DEFAULT_SENDER = os.environ.get('Email')
+    MAIL_PASSWORD = os.environ.get('Password')
+
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     TESTING = True
@@ -35,3 +44,4 @@ app_config = {
     'staging': StagingConfig,
     'production': ProductionConfig
 }
+

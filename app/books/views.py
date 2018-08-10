@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask import Blueprint, request, make_response, jsonify, g, url_for
 from urllib.parse import urljoin
-
+from sqlalchemy import desc
 from app.models import Book, User, db, Borrow
 from app.users.views import token_required
 
@@ -16,11 +16,11 @@ class Books(MethodView):
     def get(self):
         """This method retrieves allbooks """
         page = request.args.get('page', default=1, type=int)
-        limit = request.args.get('limit', default=3, type=int)
+        limit = request.args.get('limit', default=20, type=int)
 
         if page and limit:
-            books = Book.query.order_by(Book.id).paginate(page=int(page),
-                                                          per_page=int(
+            books = Book.query.order_by(desc(Book.id)).paginate(page=int(page),
+                                                                per_page=int(
                 limit),
                 error_out=False)
 
@@ -78,26 +78,26 @@ class Books(MethodView):
             if current_user:
                 if serial_no == '':
                     return make_response(jsonify(
-                        {"error": "Enter serial Number"}), 400)
+                        {"Error": "Enter serial Number"}), 400)
 
                 if book_name == '':
                     return make_response(jsonify(
-                        {"error": "Enter Book name"}), 400)
+                        {"Error": "Enter Book name"}), 400)
                 if category == '':
                     return make_response(jsonify(
-                        {"error": "Enter Category"}), 400)
+                        {"Error": "Enter Category"}), 400)
                 book = Book.query.filter_by(serial_no=serial_no).first()
 
                 if book:
                     return make_response(jsonify(
-                        {'message': 'Book  already exist'}), 409)
+                        {'Message': 'Book  already exist'}), 409)
 
                 book = Book(serial_no=serial_no, book_name=book_name,
                             category=category)
                 db.session.add(book)
                 db.session.commit()
                 return make_response(jsonify(
-                    {"message": "Book Added successfully"
+                    {"Message": "Book Added successfully"
                      }), 201)
         else:
             return make_response(jsonify({"Message":
@@ -146,10 +146,20 @@ class EditBook(MethodView):
                 book.book_name = book_name
                 book.category = category
                 book.availabilty = True
+                try:
+                    if serial_no and serial_no.strip() != "":
+                        book.serial_no = serial_no
+                    if book_name and book_name.strip() != "":
+                        book.book_name = book_name
+                    if category and category.strip() != "":
+                        book.category = category
+
+                except:
+                    pass
                 db.session.add(book)
                 db.session.commit()
                 return make_response(jsonify(
-                    {"message": "Edit successfully"
+                    {"Message": "Edit successfully"
                      }), 201)
             else:
                 return make_response(jsonify({"Error": "No book with "
@@ -168,6 +178,7 @@ class DeleteBook(MethodView):
             if book:
                 db.session.delete(book)
                 db.session.commit()
+              
 
                 return make_response(jsonify({
                     "Message": "delete successful"}), 200)

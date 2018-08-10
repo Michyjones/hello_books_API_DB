@@ -20,7 +20,7 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = request.headers.get("Authorization")
         if not token:
-            return jsonify({"Message": "Token is Missing!!!"})
+            return jsonify({"Message": "Token is Missing!!!"}, 401)
         blacklist_token = BlacklistedToken.query.filter_by(
             token=token.split()[1], valid=False).first()
         if blacklist_token:
@@ -31,10 +31,10 @@ def token_required(f):
             current_user = User.query.filter_by(email=data['email']).first()
             g.user = current_user
         except:
-            return jsonify({"Message": "Invalid Token!!"})
+            return make_response(jsonify({"Message": "Invalid Token!!"}), 401)
 
         return f(current_user, **kwargs)
-
+            
     return decorated
 
 
@@ -44,7 +44,7 @@ def send_mail(recipient, password):
     """
     sender = os.getenv('EMAIL')
     pwd = os.getenv('PASSWORD')
-    message = "Your new password is %s" % password
+    message = """Your new password is %s""" % password
     try:
         server = SMTP("smtp.gmail.com", 587)
         server.ehlo()
@@ -128,14 +128,16 @@ class UserRegister(MethodView):
                     person.IsAdmin = True
                     person.save()
                     return make_response(jsonify({"Message":
-                                                  "User upgraded to admin"}), 200)
+                                                  "User upgraded to admin"}),
+                                         200)
 
                 # downgrade admin to user
                 if person.IsAdmin is True:
                     person.IsAdmin = False
                     person.save()
                     return make_response(jsonify({"Message":
-                                                  "admin downgraded to user"}), 200)
+                                                  "admin downgraded to user"}),
+                                         200)
             else:
                 return make_response(jsonify({"Error":
                                               "User not found!!"}), 404)
@@ -162,7 +164,9 @@ class UserLogin(MethodView):
             BlacklistedToken(token.decode('UTF-8')).save()
             return make_response(jsonify({"token": token.decode('UTF-8'),
                                           "Message":
-                                          "User login successfully"}), 200)
+                                          "User login successfully",
+                                          "IsAdmin": person.IsAdmin,
+                                          "Email": person.email}), 200)
         else:
             return make_response(jsonify({"Error":
                                           "Invalid credentials"}), 401)
@@ -180,8 +184,8 @@ class LogoutUser(MethodView):
                 token=header.split()[1], valid=False)
             db.session.add(blacklisted)
             db.session.commit()
-            return make_response(jsonify({'Msg': 'You are logged out'}), 200)
-        return make_response(jsonify({'message': "Your session has "
+            return make_response(jsonify({'Message': 'You are logged out'}), 200)
+        return make_response(jsonify({'Message': "Your session has "
                                       "expired !!"}), 400)
 
 
@@ -190,7 +194,7 @@ class ChangePassword(MethodView):
     def post(self):
         """ This Method resets password """
         data = request.get_json()
-        old_password = data.get('password')
+        old_password = data.get('old_password')
         new_password = data.get('new_password')
         if not old_password:
             return make_response(jsonify({"Error":
