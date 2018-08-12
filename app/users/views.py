@@ -31,10 +31,11 @@ def token_required(f):
             current_user = User.query.filter_by(email=data['email']).first()
             g.user = current_user
         except:
-            return make_response(jsonify({"Message": "Invalid Token!!"}), 401)
+            return make_response(jsonify({"Message": "You are "
+                                          "logged Out!"}), 401)
 
         return f(current_user, **kwargs)
-            
+
     return decorated
 
 
@@ -185,8 +186,9 @@ class LogoutUser(MethodView):
             db.session.add(blacklisted)
             db.session.commit()
             return make_response(jsonify({'Message': 'You are logged out'}), 200)
-        return make_response(jsonify({'Message': "Your session has "
-                                      "expired !!"}), 400)
+        else:
+            return make_response(jsonify({'Message': "Your session has "
+                                          "expired !!"}), 400)
 
 
 class ChangePassword(MethodView):
@@ -196,6 +198,7 @@ class ChangePassword(MethodView):
         data = request.get_json()
         old_password = data.get('old_password')
         new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
         if not old_password:
             return make_response(jsonify({"Error":
                                           'Please enter your Current '
@@ -205,17 +208,21 @@ class ChangePassword(MethodView):
                                           'Password must be more than 8'
                                           'characters'
                                           }), 400)
-        person = User.query.filter_by(email=g.user.email).first()
-        if person and person.verify_password(old_password):
-            person.password = generate_password_hash(
-                new_password, method='sha256')
-            person.save()
-            return make_response(jsonify({"Message":
-                                          "Password Changed successfully"}),
-                                 200)
+        if new_password == confirm_password:
+            person = User.query.filter_by(email=g.user.email).first()
+            if person and person.verify_password(old_password):
+                person.password = generate_password_hash(
+                    new_password, method='sha256')
+                person.save()
+                return make_response(jsonify({"Message":
+                                              "Password Changed successfully"}),
+                                     200)
 
+            else:
+                return make_response(jsonify({"Error": "Old password mismatch"}),
+                                     400)
         else:
-            return make_response(jsonify({"error": "Old password mismatch"}),
+            return make_response(jsonify({"Error": "Password mismatch"}),
                                  400)
 
 
