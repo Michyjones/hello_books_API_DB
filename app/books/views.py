@@ -145,7 +145,6 @@ class EditBook(MethodView):
                 book.serial_no = serial_no
                 book.book_name = book_name
                 book.category = category
-                book.availabilty = True
                 try:
                     if serial_no and serial_no.strip() != "":
                         book.serial_no = serial_no
@@ -176,9 +175,11 @@ class DeleteBook(MethodView):
         if g.user.IsAdmin is True:
             book = Book.query.filter_by(id=id).first()
             if book:
+                if not book.availabilty:
+                    return make_response(jsonify({
+                        "Message": "Can Not delete unreturned book"}), 409)
                 db.session.delete(book)
                 db.session.commit()
-              
 
                 return make_response(jsonify({
                     "Message": "delete successful"}), 200)
@@ -212,13 +213,16 @@ class BorrowBook(MethodView):
             return make_response(jsonify(borrowed), 200)
 
         # get borrowing history
-        borrows = Borrow.query.filter_by(user_email=g.user.email)
+        borrows = Borrow.query.filter_by(
+            user_email=g.user.email).order_by(desc(Borrow.date_borrowed))
         borrowed = []
         for borrow_book in borrows:
             borrowed.append({
                 # "id": borrow_book.id,
                 "user_email": borrow_book.user_email,
                 "book_id": borrow_book.book_id,
+                "book_name": borrow_book.book_name,
+                "category": borrow_book.category,
                 "date_borrowed": borrow_book.date_borrowed,
                 "date_returned": borrow_book.date_returned,
                 "returned": borrow_book.returned
@@ -236,7 +240,8 @@ class BorrowBook(MethodView):
         if book:
             if book.availabilty is True:
                 borrow_book = Borrow(
-                    user_email=g.user.email, book_id=id, returned=False)
+                    user_email=g.user.email, book_id=id, book_name=book.book_name,
+                    category=book.category, returned=False)
                 book.availabilty = False
                 db.session.add(borrow_book)
                 db.session.commit()
