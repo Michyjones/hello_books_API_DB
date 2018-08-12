@@ -17,11 +17,11 @@ email = sys.argv[4]
 password = sys.argv[5]
 confirm_password = sys.argv[6]
 
-person = User.query.filter_by(email=email)
+person = User.query.filter_by(email=email).first()
 if person:
     print("User already exist")
 
-if password == confirm_password:
+elif password == confirm_password:
 
     new_admin = User(first_name=first_name.strip(),
                      last_name=last_name.strip(),
