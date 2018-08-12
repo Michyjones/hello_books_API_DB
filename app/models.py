@@ -58,6 +58,8 @@ class Borrow(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     book_id = db.Column(db.Integer, db.ForeignKey('book.id'))
     user_email = db.Column(db.String, db.ForeignKey('user.email'))
+    book_name = db.Column('book_name', db.String(100))
+    category = db.Column('category', db.String(50))
     date_borrowed = db.Column(
         db.DateTime, default=datetime.now, nullable=False)
     date_returned = db.Column(
