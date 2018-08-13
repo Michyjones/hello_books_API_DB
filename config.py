@@ -17,7 +17,7 @@ class TestingConfig(BaseConfig):
     DEBUG = False
     TESTING = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@localhost:5430/tests'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@localhost:5432/tests'
 
 
 class StagingConfig(BaseConfig):
