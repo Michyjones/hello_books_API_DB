@@ -278,17 +278,17 @@ class UserAuthentication(unittest.TestCase):
         self.assertEqual(output['Error'],
                          "Email not found!")
 
-    # This tests reset password by sending password to the mail
-    def test_reset_password(self):
-        user = {"email": "mike.gitau92@gmail.com"}
-        response = self.client.post(
-            "/api/v2/auth/reset-password", data=json.dumps(user),
-            content_type="application/json")
-        self.assertEqual(response.status_code, 200)
-        output = json.loads(response.data)
-        self.assertEqual(output['Message'],
-                         "A link has been sent to your email with "
-                         "the instructions")
+    # # This tests reset password by sending password to the mail
+    # def test_reset_password(self):
+    #     user = {"email": "mike.gitau92@gmail.com"}
+    #     response = self.client.post(
+    #         "/api/v2/auth/reset-password", data=json.dumps(user),
+    #         content_type="application/json")
+    #     self.assertEqual(response.status_code, 200)
+    #     output = json.loads(response.data)
+    #     self.assertEqual(output['Message'],
+    #                      "A link has been sent to your email with "
+    #                      "the instructions")
 
     def tearDown(self):
         with self.app.app_context():
