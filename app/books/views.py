@@ -14,7 +14,7 @@ book = Blueprint('book', __name__, url_prefix='/api/v2')
 class Books(MethodView):
     @token_required
     def get(self):
-        """This method retrieves allbooks """
+        """This method retrieves allbooks with the page limit"""
         page = request.args.get('page', default=1, type=int)
         limit = request.args.get('limit', default=20, type=int)
 
@@ -60,14 +60,14 @@ class Books(MethodView):
                     }
                     return make_response(jsonify(page_details), 200)
                 else:
-                    return make_response(jsonify({"error":
+                    return make_response(jsonify({"Error":
 
                                                   "You have no book on "
                                                   "this page"}), 404)
 
     @token_required
     def post(self):
-        """This method add a book"""
+        """This method add a book to the library"""
         if g.user.IsAdmin is True:
             data = request.get_json()
             serial_no = data.get('serial_no')
@@ -185,7 +185,7 @@ class DeleteBook(MethodView):
                     "Message": "delete successful"}), 200)
             else:
                 return make_response(jsonify({
-                    "error": "Book does not exist."}), 404)
+                    "Error": "Book does not exist."}), 404)
         else:
             return make_response(jsonify({"Message":
                                           "You are not Authorized !!!"}), 401)
@@ -246,8 +246,8 @@ class BorrowBook(MethodView):
                 db.session.add(borrow_book)
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have borrowed "
-                                              "a book with id {}".format(id
-                                                                         )}),
+                                              "a book happy reading"
+                                              }),
                                      200)
 
             else:
@@ -278,8 +278,7 @@ class ReturnBook(MethodView):
                 db.session.add(return_book)
                 db.session.commit()
                 return make_response(jsonify({"Message": "You have Returned "
-                                              "a book with id {}".format(id
-                                                                         )}),
+                                              "the borrowed book"}),
                                      200)
 
             else:
