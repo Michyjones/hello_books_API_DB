@@ -45,7 +45,9 @@ def send_mail(recipient, password):
     """
     sender = os.getenv('EMAIL')
     pwd = os.getenv('PASSWORD')
-    message = """Your new password is %s""" % password
+    subject = "Reset Password"
+    text = """Your new password is %s""" % password
+    message = 'Subject: {}\n\n{}'.format(subject, text)
     try:
         server = SMTP("smtp.gmail.com", 587)
         server.ehlo()
@@ -73,6 +75,10 @@ class UserRegister(MethodView):
         valid_email = re.match(
             "(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
             email.strip())
+        if not isinstance(first_name, str) or not isinstance(last_name, str):
+            return make_response(jsonify(
+                {"Message": "Name should be a string"}), 400)
+
         if first_name.strip() == "":
             return make_response(jsonify(
                 {"Message": "Please enter your first name"}), 400)
@@ -80,6 +86,11 @@ class UserRegister(MethodView):
         if last_name.strip() == "":
             return make_response(jsonify(
                 {"Message": "Please enter your last name"}), 400)
+
+        if not first_name.isalpha() or not last_name.isalpha():
+            return make_response(jsonify(
+                {"Message": "Name should contain letters only"}), 400)
+
         if address.strip() == "":
             return make_response(jsonify(
                 {"Message": "Please enter your address"}), 400)
@@ -205,7 +216,7 @@ class ChangePassword(MethodView):
                                           'password'}), 400)
         if len(new_password) < 8:
             return make_response(jsonify({"Error":
-                                          'Password must be more than 8'
+                                          'Password must be more than 8 '
                                           'characters'
                                           }), 400)
         if new_password == confirm_password:
